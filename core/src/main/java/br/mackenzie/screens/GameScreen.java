@@ -23,9 +23,7 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
         batch.begin();
-        // desenha o fundo primeiro
         batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        // depois a imagem
         batch.draw(image, 140, 210);
         batch.end();
     }
