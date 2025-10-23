@@ -7,29 +7,30 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import br.mackenzie.Main;
+import br.mackenzie.entities.Player;
 
 public class GameScreen extends ScreenAdapter {
 
     private final Main game;
     private final SpriteBatch batch;
 
-    private Stage stage;
     private Viewport viewport;
     private OrthographicCamera camera;
 
-    private Texture bgTexture;
-    private Texture playerTexture;
+    private Texture bg;
+    private float bg1x = 0f;
+    private float bg2x = 0f;
+    private float bg1speed = 80f;
+    private float bg2speed = 160f;
 
-    // posições
-    private float playerX;
-    private float playerY;
-    private float bgX; // posição horizontal do fundo
-    private float playerSpeed = 200f; // pixels por segundo
-    private float bgSpeed = 150f;     // velocidade do fundo
+    private Player player;
+    private float playerX, playerY;
+
+    private float impulso = 0f;
+    private final float IMPULSO_DUR = 0.25f;
 
     public GameScreen(Main game) {
         this.game = game;
@@ -38,74 +39,68 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void show() {
-        camera = new OrthographicCamera();
+        camera   = new OrthographicCamera();
         viewport = new FitViewport(1280, 720, camera);
-        stage = new Stage(viewport, batch);
 
-        loadTextures();
+        // garanta que a câmera comece centralizada no mundo
+        viewport.apply(true);
+        camera.position.set(1280/2f, 720/2f, 0);
+        camera.update();
 
-        // posiciona player no centro
-        playerX = (1280 / 2f) - (playerTexture.getWidth() / 2f);
-        playerY = (720 / 2f) - (playerTexture.getHeight() / 2f);
+        bg = new Texture(Gdx.files.internal("background.jpg"));
+        player = new Player(0, 0);
 
-        bgX = 0;
-    }
-
-    private void loadTextures() {
-        bgTexture = new Texture(Gdx.files.internal("background.png"));
-        playerTexture = new Texture(Gdx.files.internal("player.png"));
+        // posição horizontal: centro; vertical: chão
+        float groundY = 32f; // ajuste fino da “linha do chão”
+        playerX = 1280/2f - player.getWidth()/2f;
+        playerY = groundY;
     }
 
     @Override
     public void render(float delta) {
-        // limpar tela
-        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClearColor(0, 0, 0, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // entrada do jogador
-        handleInput(delta);
-
-        // desenha o fundo e player
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-        //desenha 2x para loop contínuo
-        batch.draw(bgTexture, bgX, 0, 1280, 720);
-        batch.draw(bgTexture, bgX + 1280, 0, 1280, 720);
-        batch.draw(playerTexture, playerX, playerY);
-        batch.end();
-
-        if (bgX <= -1280) {
-            bgX = 0;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+            impulso = IMPULSO_DUR;
         }
 
-        //esc volta para o menu
+        boolean pedalando = impulso > 0f;
+        if (pedalando) {
+            impulso -= delta;
+            if (impulso < 0f) impulso = 0f;
+            bg1x -= bg1speed * delta;
+            bg2x -= bg2speed * delta;
+        }
+
+        if (bg1x <= -1280f) bg1x += 1280f;
+        if (bg2x <= -1280f) bg2x += 1280f;
+
+        player.animateOnly(delta, pedalando);
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             game.setScreen(new MenuScreen(game));
-        }
-    }
-
-    private void handleInput(float delta) {
-
-        // mover fundo a cada click do espaco
-        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
-            bgX -= bgSpeed * delta;
+            return;
         }
 
-        if (playerX < 0) playerX = 0;
-        if (playerY < 0) playerY = 0;
-        if (playerX > 1280 - playerTexture.getWidth()) playerX = 1280 - playerTexture.getWidth();
-        if (playerY > 720 - playerTexture.getHeight()) playerY = 720 - playerTexture.getHeight();
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        batch.draw(bg, bg1x, 0, 1280, 720);
+        batch.draw(bg, bg1x + 1280f, 0, 1280, 720);
+        batch.draw(bg, bg2x, 0, 1280, 720);
+        batch.draw(bg, bg2x + 1280f, 0, 1280, 720);
+        player.drawAt(batch, playerX, playerY);
+        batch.end();
     }
 
     @Override
-    public void resize(int width, int height) {
-        viewport.update(width, height, true);
+    public void resize(int w, int h) {
+        viewport.update(w, h, true);
     }
 
     @Override
     public void dispose() {
-        if (bgTexture != null) bgTexture.dispose();
-        if (playerTexture != null) playerTexture.dispose();
-        stage.dispose();
+        bg.dispose();
+        player.dispose();
     }
 }

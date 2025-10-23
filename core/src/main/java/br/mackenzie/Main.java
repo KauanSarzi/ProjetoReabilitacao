@@ -20,7 +20,7 @@ public class Main extends Game {
     public void goToGame() {
         // TODO: quando tiver GameScreen, troque aqui:
         // setScreen(new GameScreen(this));
-        setScreen(new GameScreen(this));
+        setScreen(new br.mackenzie.screens.GameScreen(this));
     }
 
     @Override
