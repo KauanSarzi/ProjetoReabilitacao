@@ -12,12 +12,6 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import br.mackenzie.Main;
 
-/**
- * GameScreen simples:
- * - Mostra fundo e personagem (player)
- * - Move o player com as setas
- * - ESC volta para o menu
- */
 public class GameScreen extends ScreenAdapter {
 
     private final Main game;
@@ -30,10 +24,12 @@ public class GameScreen extends ScreenAdapter {
     private Texture bgTexture;
     private Texture playerTexture;
 
-    // posição do jogador
+    // posições
     private float playerX;
     private float playerY;
+    private float bgX; // posição horizontal do fundo
     private float playerSpeed = 200f; // pixels por segundo
+    private float bgSpeed = 150f;     // velocidade do fundo
 
     public GameScreen(Main game) {
         this.game = game;
@@ -48,9 +44,11 @@ public class GameScreen extends ScreenAdapter {
 
         loadTextures();
 
-        // coloca o player no centro da tela
+        // posiciona player no centro
         playerX = (1280 / 2f) - (playerTexture.getWidth() / 2f);
         playerY = (720 / 2f) - (playerTexture.getHeight() / 2f);
+
+        bgX = 0;
     }
 
     private void loadTextures() {
@@ -67,35 +65,32 @@ public class GameScreen extends ScreenAdapter {
         // entrada do jogador
         handleInput(delta);
 
-        // desenhar fundo e player
+        // desenha o fundo e player
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
-        batch.draw(bgTexture, 0, 0, 1280, 720); // fundo cobrindo a tela
+        //desenha 2x para loop contínuo
+        batch.draw(bgTexture, bgX, 0, 1280, 720);
+        batch.draw(bgTexture, bgX + 1280, 0, 1280, 720);
         batch.draw(playerTexture, playerX, playerY);
         batch.end();
 
-        // tecla ESC volta para o menu
+        if (bgX <= -1280) {
+            bgX = 0;
+        }
+
+        //esc volta para o menu
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             game.setScreen(new MenuScreen(game));
         }
     }
 
     private void handleInput(float delta) {
-        // movimento com setas
-        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            playerX -= playerSpeed * delta;
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            playerX += playerSpeed * delta;
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-            playerY += playerSpeed * delta;
-        }
-        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-            playerY -= playerSpeed * delta;
+
+        // mover fundo a cada click do espaco
+        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+            bgX -= bgSpeed * delta;
         }
 
-        // limites da tela (pra não sair)
         if (playerX < 0) playerX = 0;
         if (playerY < 0) playerY = 0;
         if (playerX > 1280 - playerTexture.getWidth()) playerX = 1280 - playerTexture.getWidth();
