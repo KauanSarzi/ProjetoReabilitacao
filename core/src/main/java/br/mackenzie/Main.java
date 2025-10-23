@@ -1,5 +1,6 @@
 package br.mackenzie;
 
+import br.mackenzie.screens.GameScreen;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import br.mackenzie.screens.MenuScreen;
@@ -19,7 +20,7 @@ public class Main extends Game {
     public void goToGame() {
         // TODO: quando tiver GameScreen, troque aqui:
         // setScreen(new GameScreen(this));
-        System.out.println("Iniciar Sessão clicado — implemente goToGame() com sua GameScreen.");
+        setScreen(new GameScreen(this));
     }
 
     @Override
