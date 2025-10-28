@@ -119,7 +119,7 @@ public class GameScreen extends ScreenAdapter {
         player.animateOnly(delta, pedalando);
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            game.setScreen(new MenuScreen(game));
+            game.setScreen(new PauseScreen(game, this));
             return;
         }
 
