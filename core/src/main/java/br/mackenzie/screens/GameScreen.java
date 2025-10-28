@@ -136,10 +136,10 @@ public class GameScreen extends ScreenAdapter {
         player.drawAt(batch, playerX, playerY);
 
         // HUD
-        font.draw(batch, String.format("⏱ Tempo: %.1fs", tempoDecorrido), 40, 700);
-        font.draw(batch, String.format("🚴 Pedaladas por segundo: %.1f", pedaladasPorSegundo), 40, 660);
-        font.draw(batch, String.format("⭐ Pontos: %.0f", pontos), 40, 620);
-        font.draw(batch, String.format("👣 Pedaladas totais: %d", totalPedaladas), 40, 580);
+        font.draw(batch, String.format("Tempo: %.1fs", tempoDecorrido), 40, 700);
+        font.draw(batch, String.format("Pedaladas por segundo: %.1f", pedaladasPorSegundo), 40, 660);
+        font.draw(batch, String.format("Pontos: %.0f", pontos), 40, 620);
+        font.draw(batch, String.format("Pedaladas totais: %d", totalPedaladas), 40, 580);
 
         batch.end();
     }
