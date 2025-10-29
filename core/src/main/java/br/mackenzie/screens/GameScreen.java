@@ -22,11 +22,22 @@ public class GameScreen extends ScreenAdapter {
     private Viewport viewport;
     private OrthographicCamera camera;
 
-    private Texture bg;
+    // --- BACKGROUNDS: dia → tarde → noite com transição fade ---
+    private Texture bgDay, bgAfternoon, bgNight;
+    private Texture currentBg, nextBg;
+
     private float bg1x = 0f;
     private float bg2x = 0f;
     private float bg1speedBase = 80f;
     private float bg2speedBase = 160f;
+
+    private boolean transitioning = false;
+    private float transitionAlpha = 0f;
+    private float transitionDuration = 2f; // segundos
+    private float transitionTimer = 0f;
+
+    // 1=dia, 2=tarde, 3=noite
+    private int currentLevel = 1;
 
     private Player player;
     private float playerX, playerY;
@@ -60,7 +71,12 @@ public class GameScreen extends ScreenAdapter {
         camera.position.set(1280 / 2f, 720 / 2f, 0);
         camera.update();
 
-        bg = new Texture(Gdx.files.internal("background.jpg"));
+        // Carrega fundos
+        bgDay = new Texture(Gdx.files.internal("background_day.jpg"));
+        bgAfternoon = new Texture(Gdx.files.internal("background_afternoon.jpg"));
+        bgNight = new Texture(Gdx.files.internal("background_night.jpg"));
+        currentBg = bgDay; // começa de dia
+
         player = new Player(0, 0);
 
         float groundY = 32f;
@@ -70,6 +86,14 @@ public class GameScreen extends ScreenAdapter {
         font = new BitmapFont();
         font.setColor(Color.WHITE);
         font.getData().setScale(2f);
+    }
+
+    private void startBackgroundTransition(Texture newBg) {
+        if (newBg == null || newBg == currentBg) return;
+        nextBg = newBg;
+        transitioning = true;
+        transitionTimer = 0f;
+        transitionAlpha = 0f;
     }
 
     @Override
@@ -92,12 +116,12 @@ public class GameScreen extends ScreenAdapter {
             impulso -= delta;
             if (impulso < 0f) impulso = 0f;
 
-            // o fundo de meche mais rapido se pedalar mais rapido
-            float speedMultiplier = 1f + pedaladasPorSegundo / 3f; // aumenta velocidade
+            // fundo mexe mais rápido se pedalar mais rápido
+            float speedMultiplier = 1f + pedaladasPorSegundo / 3f;
             float bg1speed = bg1speedBase * speedMultiplier;
             float bg2speed = bg2speedBase * speedMultiplier;
 
-            // o fundo se move so quando pedala, sem pedalar = parado
+            // o fundo se move só quando pedala; sem pedalar = parado
             bg1x -= bg1speed * delta;
             bg2x -= bg2speed * delta;
         }
@@ -116,6 +140,29 @@ public class GameScreen extends ScreenAdapter {
         if (bg1x <= -1280f) bg1x += 1280f;
         if (bg2x <= -1280f) bg2x += 1280f;
 
+        // Troca de período por tempo (dia 60s → tarde, 120s → noite)
+        if (!transitioning) {
+            if (tempoDecorrido > 60f && currentLevel == 1) {
+                startBackgroundTransition(bgAfternoon);
+                currentLevel = 2;
+            } else if (tempoDecorrido > 120f && currentLevel == 2) {
+                startBackgroundTransition(bgNight);
+                currentLevel = 3;
+            }
+        }
+
+        // Atualiza fade de transição
+        if (transitioning) {
+            transitionTimer += delta;
+            transitionAlpha = Math.min(1f, transitionTimer / transitionDuration);
+            if (transitionAlpha >= 1f) {
+                currentBg = nextBg;
+                nextBg = null;
+                transitioning = false;
+                transitionAlpha = 0f;
+            }
+        }
+
         player.animateOnly(delta, pedalando);
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
@@ -126,11 +173,21 @@ public class GameScreen extends ScreenAdapter {
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
-        // Fundo
-        batch.draw(bg, bg1x, 0, 1280, 720);
-        batch.draw(bg, bg1x + 1280f, 0, 1280, 720);
-        batch.draw(bg, bg2x, 0, 1280, 720);
-        batch.draw(bg, bg2x + 1280f, 0, 1280, 720);
+        // --- Fundo base (current) ---
+        batch.draw(currentBg, bg1x, 0, 1280, 720);
+        batch.draw(currentBg, bg1x + 1280f, 0, 1280, 720);
+        batch.draw(currentBg, bg2x, 0, 1280, 720);
+        batch.draw(currentBg, bg2x + 1280f, 0, 1280, 720);
+
+        // --- Fundo em transição
+        if (transitioning && nextBg != null) {
+            batch.setColor(1f, 1f, 1f, transitionAlpha);
+            batch.draw(nextBg, bg1x, 0, 1280, 720);
+            batch.draw(nextBg, bg1x + 1280f, 0, 1280, 720);
+            batch.draw(nextBg, bg2x, 0, 1280, 720);
+            batch.draw(nextBg, bg2x + 1280f, 0, 1280, 720);
+            batch.setColor(Color.WHITE); // reset obrigatório
+        }
 
         // Jogador
         player.drawAt(batch, playerX, playerY);
@@ -151,8 +208,13 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void dispose() {
-        bg.dispose();
+        // Descarta somente as texturas efetivamente carregadas aqui
+        if (bgDay != null) bgDay.dispose();
+        if (bgAfternoon != null) bgAfternoon.dispose();
+        if (bgNight != null) bgNight.dispose();
+
         player.dispose();
         font.dispose();
     }
 }
+

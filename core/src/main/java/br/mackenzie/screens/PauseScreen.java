@@ -81,7 +81,7 @@ public class PauseScreen extends ScreenAdapter {
         restartBtn = new Image(restartTex);
         restartBtn.setSize(200, 200);
 
-        // ===== COMPORTAMENTO DOS BOTÕES =====
+
 
         // Retomar o jogo
         continueBtn.addListener(new ClickListener() {
