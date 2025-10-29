@@ -142,10 +142,10 @@ public class GameScreen extends ScreenAdapter {
 
         // Troca de período por tempo (dia 60s → tarde, 120s → noite)
         if (!transitioning) {
-            if (tempoDecorrido > 60f && currentLevel == 1) {
+            if (tempoDecorrido > 5f && currentLevel == 1) {
                 startBackgroundTransition(bgAfternoon);
                 currentLevel = 2;
-            } else if (tempoDecorrido > 120f && currentLevel == 2) {
+            } else if (tempoDecorrido > 15f && currentLevel == 2) {
                 startBackgroundTransition(bgNight);
                 currentLevel = 3;
             }
