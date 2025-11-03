@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -56,6 +57,12 @@ public class GameScreen extends ScreenAdapter {
     private int pedaladasRecentes = 0;
 
     private BitmapFont font;
+    private GlyphLayout layout;
+
+    // Texto de nível
+    private String levelText = "";
+    private float levelTextTimer = 0f;
+    private final float LEVEL_TEXT_DURATION = 2.5f;
 
     public GameScreen(Main game) {
         this.game = game;
@@ -86,6 +93,11 @@ public class GameScreen extends ScreenAdapter {
         font = new BitmapFont();
         font.setColor(Color.WHITE);
         font.getData().setScale(2f);
+
+        layout = new GlyphLayout();
+
+        // mostrar nível inicial
+        showLevelText(1);
     }
 
     private void startBackgroundTransition(Texture newBg) {
@@ -96,6 +108,11 @@ public class GameScreen extends ScreenAdapter {
         transitionAlpha = 0f;
     }
 
+    private void showLevelText(int level) {
+        levelText = "NÍVEL " + level;
+        levelTextTimer = LEVEL_TEXT_DURATION;
+    }
+
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1f);
@@ -103,6 +120,12 @@ public class GameScreen extends ScreenAdapter {
 
         tempoDecorrido += delta;
         tempoDesdeUltimoReset += delta;
+
+        // atualiza timer do texto de nível
+        if (levelTextTimer > 0f) {
+            levelTextTimer -= delta;
+            if (levelTextTimer < 0f) levelTextTimer = 0f;
+        }
 
         // Detecta pedalada (barra de espaço)
         if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
@@ -140,14 +163,16 @@ public class GameScreen extends ScreenAdapter {
         if (bg1x <= -1280f) bg1x += 1280f;
         if (bg2x <= -1280f) bg2x += 1280f;
 
-        // Troca de período por tempo (dia 60s → tarde, 120s → noite)
+        // Troca de período por tempo (aqui está sua troca de nível)
         if (!transitioning) {
             if (tempoDecorrido > 5f && currentLevel == 1) {
                 startBackgroundTransition(bgAfternoon);
                 currentLevel = 2;
+                showLevelText(2);
             } else if (tempoDecorrido > 15f && currentLevel == 2) {
                 startBackgroundTransition(bgNight);
                 currentLevel = 3;
+                showLevelText(3);
             }
         }
 
@@ -198,6 +223,22 @@ public class GameScreen extends ScreenAdapter {
         font.draw(batch, String.format("Pontos: %.0f", pontos), 40, 620);
         font.draw(batch, String.format("Pedaladas totais: %d", totalPedaladas), 40, 580);
 
+        // Texto de nível centralizado
+        if (levelTextTimer > 0f) {
+            // aumenta temporariamente
+            float oldScaleX = font.getData().scaleX;
+            float oldScaleY = font.getData().scaleY;
+            font.getData().setScale(3f);
+
+            layout.setText(font, levelText);
+            float x = (1280 - layout.width) / 2f;
+            float y = (720 + layout.height) / 2f;
+            font.draw(batch, layout, x, y);
+
+            // volta ao normal
+            font.getData().setScale(oldScaleX, oldScaleY);
+        }
+
         batch.end();
     }
 
@@ -208,7 +249,6 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void dispose() {
-        // Descarta somente as texturas efetivamente carregadas aqui
         if (bgDay != null) bgDay.dispose();
         if (bgAfternoon != null) bgAfternoon.dispose();
         if (bgNight != null) bgNight.dispose();
@@ -217,4 +257,3 @@ public class GameScreen extends ScreenAdapter {
         font.dispose();
     }
 }
-
