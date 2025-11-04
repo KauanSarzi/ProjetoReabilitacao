@@ -45,7 +45,7 @@ public class PauseScreen extends ScreenAdapter {
 
         // Fade-in inicial
         stage.getRoot().getColor().a = 0f;
-        stage.getRoot().addAction(Actions.fadeIn(0.8f));
+        stage.getRoot().addAction(Actions.fadeIn(0f));
     }
 
     private void loadTextures() {
