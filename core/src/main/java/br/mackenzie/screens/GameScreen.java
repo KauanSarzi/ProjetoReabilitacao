@@ -1,5 +1,7 @@
 package br.mackenzie.screens;
 
+import br.mackenzie.input.PedalController;
+import br.mackenzie.ui.Hud;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
@@ -7,8 +9,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -23,43 +23,29 @@ public class GameScreen extends ScreenAdapter {
     private Viewport viewport;
     private OrthographicCamera camera;
 
-    // --- BACKGROUNDS: dia → tarde → noite com transição fade ---
+    // BACKGROUND (fica na própria tela)
     private Texture bgDay, bgAfternoon, bgNight;
     private Texture currentBg, nextBg;
-
     private float bg1x = 0f;
     private float bg2x = 0f;
-    private float bg1speedBase = 80f;
-    private float bg2speedBase = 160f;
-
+    private float bg1speedBase = 60f;
+    private float bg2speedBase = 120f;
     private boolean transitioning = false;
     private float transitionAlpha = 0f;
-    private float transitionDuration = 2f; // segundos
+    private float transitionDuration = 2f;
     private float transitionTimer = 0f;
-
-    // 1=dia, 2=tarde, 3=noite
     private int currentLevel = 1;
 
     private Player player;
     private float playerX, playerY;
 
-    private float impulso = 0f;
-    private final float IMPULSO_DUR = 0.25f;
+    // sistemas novos
+    private PedalController pedalController;
+    private Hud hud;
 
-    // HUD
+    // lógica de jogo
     private float tempoDecorrido = 0f;
-    private float pedaladasPorSegundo = 0f;
     private float pontos = 0f;
-    private int totalPedaladas = 0;
-
-    private float janelaTempo = 1f; // 1 segundo
-    private float tempoDesdeUltimoReset = 0f;
-    private int pedaladasRecentes = 0;
-
-    private BitmapFont font;
-    private GlyphLayout layout;
-
-    // Texto de nível
     private String levelText = "";
     private float levelTextTimer = 0f;
     private final float LEVEL_TEXT_DURATION = 2.5f;
@@ -73,39 +59,25 @@ public class GameScreen extends ScreenAdapter {
     public void show() {
         camera = new OrthographicCamera();
         viewport = new FitViewport(1280, 720, camera);
-
         viewport.apply(true);
         camera.position.set(1280 / 2f, 720 / 2f, 0);
         camera.update();
 
-        // Carrega fundos
+        // carrega fundos
         bgDay = new Texture(Gdx.files.internal("background_day.jpg"));
         bgAfternoon = new Texture(Gdx.files.internal("background_afternoon.jpg"));
         bgNight = new Texture(Gdx.files.internal("background_night.jpg"));
-        currentBg = bgDay; // começa de dia
+        currentBg = bgDay;
 
         player = new Player(0, 0);
-
         float groundY = 32f;
         playerX = 1280 / 2f - player.getWidth() / 2f;
         playerY = groundY;
 
-        font = new BitmapFont();
-        font.setColor(Color.WHITE);
-        font.getData().setScale(2f);
+        pedalController = new PedalController();
+        hud = new Hud();
 
-        layout = new GlyphLayout();
-
-        // mostrar nível inicial
         showLevelText(1);
-    }
-
-    private void startBackgroundTransition(Texture newBg) {
-        if (newBg == null || newBg == currentBg) return;
-        nextBg = newBg;
-        transitioning = true;
-        transitionTimer = 0f;
-        transitionAlpha = 0f;
     }
 
     private void showLevelText(int level) {
@@ -118,65 +90,76 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glClearColor(0, 0, 0, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            game.setScreen(new PauseScreen(game, this));
+            return;
+        }
+
+        // UPDATE GERAL
         tempoDecorrido += delta;
-        tempoDesdeUltimoReset += delta;
 
-        // atualiza timer do texto de nível
-        if (levelTextTimer > 0f) {
-            levelTextTimer -= delta;
-            if (levelTextTimer < 0f) levelTextTimer = 0f;
+        //atualiza pedal
+        pedalController.update(delta);
+        boolean pedaling = pedalController.isPedaling();
+        float pps = pedalController.getPedaladasPorSegundo(); // vamos usar direto
+
+        //atualiza background com base no pedal e na cadência
+        updateBackground(delta, pedaling, pps);
+
+        //pontos e como sao calculados, porem esse é provisorio, iremos mudar
+        pontos += pps * delta * 10f;
+
+        //anima player
+        player.animateOnly(delta, pedaling);
+
+        //verifica se troca de período
+        checkLevelChange();
+
+        //DRAW
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+
+        renderBackground(batch);
+        player.drawAt(batch, playerX, playerY);
+
+        hud.render(
+            batch,
+            tempoDecorrido,
+            pps,
+            pontos,
+            pedalController.getTotalPedaladas(),
+            levelText,
+            levelTextTimer
+        );
+
+        batch.end();
+    }
+
+
+    private void updateBackground(float delta, boolean moving, float pps) {
+        // curva mais suave + limite
+        // até 6 pps vai aumentando, depois trava no máximo
+        float speedMultiplier = 1f + Math.min(pps / 6f, 20.5f); // máximo é 20.5
+
+        //  se está pedalando muito pouco, não acelera o fundo
+        if (pps < 0.5f) {
+            speedMultiplier = 1f;
         }
 
-        // Detecta pedalada (barra de espaço)
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-            impulso = IMPULSO_DUR;
-            totalPedaladas++;
-            pedaladasRecentes++;
-        }
-
-        boolean pedalando = impulso > 0f;
-        if (pedalando) {
-            impulso -= delta;
-            if (impulso < 0f) impulso = 0f;
-
-            // fundo mexe mais rápido se pedalar mais rápido
-            float speedMultiplier = 1f + pedaladasPorSegundo / 3f;
+        if (moving) {
             float bg1speed = bg1speedBase * speedMultiplier;
             float bg2speed = bg2speedBase * speedMultiplier;
 
-            // o fundo se move só quando pedala; sem pedalar = parado
+            // o fundo se move só quando pedala
             bg1x -= bg1speed * delta;
             bg2x -= bg2speed * delta;
         }
 
-        // Atualiza pedaladas por segundo a cada segundo
-        if (tempoDesdeUltimoReset >= janelaTempo) {
-            pedaladasPorSegundo = pedaladasRecentes / tempoDesdeUltimoReset;
-            pedaladasRecentes = 0;
-            tempoDesdeUltimoReset = 0f;
-        }
-
-        // Pontos cumulativos baseados em pedaladas por segundo
-        pontos += pedaladasPorSegundo * delta * 10f;
-
-        // Loop do fundo
+        // loop do fundo
         if (bg1x <= -1280f) bg1x += 1280f;
         if (bg2x <= -1280f) bg2x += 1280f;
 
-        // Troca de período por tempo (aqui está sua troca de nível)
-        if (!transitioning) {
-            if (tempoDecorrido > 5f && currentLevel == 1) {
-                startBackgroundTransition(bgAfternoon);
-                currentLevel = 2;
-                showLevelText(2);
-            } else if (tempoDecorrido > 15f && currentLevel == 2) {
-                startBackgroundTransition(bgNight);
-                currentLevel = 3;
-                showLevelText(3);
-            }
-        }
-
-        // Atualiza fade de transição
+        // fade
         if (transitioning) {
             transitionTimer += delta;
             transitionAlpha = Math.min(1f, transitionTimer / transitionDuration);
@@ -188,58 +171,51 @@ public class GameScreen extends ScreenAdapter {
             }
         }
 
-        player.animateOnly(delta, pedalando);
-
-        if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            game.setScreen(new PauseScreen(game, this));
-            return;
+        // timer do texto de nível
+        if (levelTextTimer > 0f) {
+            levelTextTimer -= delta;
+            if (levelTextTimer < 0f) levelTextTimer = 0f;
         }
+    }
 
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-
-        // --- Fundo base (current) ---
+    private void renderBackground(SpriteBatch batch) {
+        // fundo base
         batch.draw(currentBg, bg1x, 0, 1280, 720);
         batch.draw(currentBg, bg1x + 1280f, 0, 1280, 720);
         batch.draw(currentBg, bg2x, 0, 1280, 720);
         batch.draw(currentBg, bg2x + 1280f, 0, 1280, 720);
 
-        // --- Fundo em transição
+        // fundo em transição
         if (transitioning && nextBg != null) {
             batch.setColor(1f, 1f, 1f, transitionAlpha);
             batch.draw(nextBg, bg1x, 0, 1280, 720);
             batch.draw(nextBg, bg1x + 1280f, 0, 1280, 720);
             batch.draw(nextBg, bg2x, 0, 1280, 720);
             batch.draw(nextBg, bg2x + 1280f, 0, 1280, 720);
-            batch.setColor(Color.WHITE); // reset obrigatório
+            batch.setColor(Color.WHITE);
         }
+    }
 
-        // Jogador
-        player.drawAt(batch, playerX, playerY);
-
-        // HUD
-        font.draw(batch, String.format("Tempo: %.1fs", tempoDecorrido), 40, 700);
-        font.draw(batch, String.format("Pedaladas por segundo: %.1f", pedaladasPorSegundo), 40, 660);
-        font.draw(batch, String.format("Pontos: %.0f", pontos), 40, 620);
-        font.draw(batch, String.format("Pedaladas totais: %d", totalPedaladas), 40, 580);
-
-        // Texto de nível centralizado
-        if (levelTextTimer > 0f) {
-            // aumenta temporariamente
-            float oldScaleX = font.getData().scaleX;
-            float oldScaleY = font.getData().scaleY;
-            font.getData().setScale(3f);
-
-            layout.setText(font, levelText);
-            float x = (1280 - layout.width) / 2f;
-            float y = (720 + layout.height) / 2f;
-            font.draw(batch, layout, x, y);
-
-            // volta ao normal
-            font.getData().setScale(oldScaleX, oldScaleY);
+    private void checkLevelChange() {
+        if (!transitioning) {
+            if (tempoDecorrido > 5f && currentLevel == 1) {
+                startBackgroundTransition(bgAfternoon);
+                currentLevel = 2;
+                showLevelText(2);
+            } else if (tempoDecorrido > 15f && currentLevel == 2) {
+                startBackgroundTransition(bgNight);
+                currentLevel = 3;
+                showLevelText(3);
+            }
         }
+    }
 
-        batch.end();
+    private void startBackgroundTransition(Texture newBg) {
+        if (newBg == null || newBg == currentBg) return;
+        nextBg = newBg;
+        transitioning = true;
+        transitionTimer = 0f;
+        transitionAlpha = 0f;
     }
 
     @Override
@@ -254,6 +230,6 @@ public class GameScreen extends ScreenAdapter {
         if (bgNight != null) bgNight.dispose();
 
         player.dispose();
-        font.dispose();
+        hud.dispose();
     }
 }
