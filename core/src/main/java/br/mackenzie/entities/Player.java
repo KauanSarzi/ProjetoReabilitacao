@@ -3,6 +3,7 @@ package br.mackenzie.entities;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.math.Rectangle;
 
 public class Player {
 
@@ -51,14 +52,15 @@ public class Player {
     public int getWidth()  { return (int)(frames[0].getWidth() * escala); }
     public int getHeight() { return (int)(frames[0].getHeight() * escala); }
 
+    public Rectangle getBounds(float drawX, float drawY) {
+        float largura = frames[frameIndex].getWidth() * escala;
+        float altura = frames[frameIndex].getHeight() * escala;
+        return new Rectangle(drawX, drawY, largura, altura);
+    }
+
     public void dispose() {
         for (Texture t : frames) t.dispose();
     }
 }
-
-
-
-
-
 
 
