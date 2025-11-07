@@ -1,6 +1,8 @@
 package br.mackenzie.screens;
 
+import br.mackenzie.data.GameStats;
 import br.mackenzie.input.PedalController;
+import br.mackenzie.logic.EnemyManager;
 import br.mackenzie.ui.Hud;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -42,6 +44,7 @@ public class GameScreen extends ScreenAdapter {
     // sistemas novos
     private PedalController pedalController;
     private Hud hud;
+    private EnemyManager enemyManager;
 
     // lógica de jogo
     private float tempoDecorrido = 0f;
@@ -49,6 +52,11 @@ public class GameScreen extends ScreenAdapter {
     private String levelText = "";
     private float levelTextTimer = 0f;
     private final float LEVEL_TEXT_DURATION = 2.5f;
+
+    // estatísticas para tracking
+    private float pedaladasPorSegundoMaxima = 0f;
+    private float somaCadencias = 0f;
+    private int contagemCadencias = 0;
 
     public GameScreen(Main game) {
         this.game = game;
@@ -77,6 +85,9 @@ public class GameScreen extends ScreenAdapter {
         pedalController = new PedalController();
         hud = new Hud();
 
+        // Inicializa o inimigo na mesma altura do jogador
+        enemyManager = new EnemyManager(groundY);
+
         showLevelText(1);
     }
 
@@ -98,29 +109,59 @@ public class GameScreen extends ScreenAdapter {
         // UPDATE GERAL
         tempoDecorrido += delta;
 
-        //atualiza pedal
+        // atualiza pedal
         pedalController.update(delta);
         boolean pedaling = pedalController.isPedaling();
-        float pps = pedalController.getPedaladasPorSegundo(); // vamos usar direto
+        float pps = pedalController.getPedaladasPorSegundo();
 
-        //atualiza background com base no pedal e na cadência
+        // tracking de estatísticas
+        if (pps > pedaladasPorSegundoMaxima) {
+            pedaladasPorSegundoMaxima = pps;
+        }
+        somaCadencias += pps;
+        contagemCadencias++;
+
+        // atualiza background com base no pedal e na cadência
         updateBackground(delta, pedaling, pps);
 
-        //pontos e como sao calculados, porem esse é provisorio, iremos mudar
+        // pontos e como são calculados, porém esse é provisório, iremos mudar
         pontos += pps * delta * 10f;
 
-        //anima player
+        // anima player
         player.animateOnly(delta, pedaling);
 
-        //verifica se troca de período
+        // verifica se troca de período
         checkLevelChange();
 
-        //DRAW
+        // ATUALIZA O INIMIGO e verifica se pegou o jogador
+        boolean jogadorCapturado = enemyManager.update(
+            delta,
+            playerX,
+            playerY,
+            player.getWidth(),
+            player.getHeight(),
+            pps
+        );
+
+        if (jogadorCapturado) {
+            gameOver();
+            return; // para o render
+        }
+
+        // DRAW
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
 
         renderBackground(batch);
+
+        // Desenha o inimigo ANTES do player (para ficar atrás)
+        enemyManager.render(batch, playerY);
+
         player.drawAt(batch, playerX, playerY);
+
+        float distanciaInimigo = enemyManager.getDistanciaAteJogador(playerX);
+        boolean emPerigo = enemyManager.jogadorEmPerigo(pps);
+        float velocidadeMinima = enemyManager.getVelocidadeMinimaAtual();
 
         hud.render(
             batch,
@@ -129,19 +170,39 @@ public class GameScreen extends ScreenAdapter {
             pontos,
             pedalController.getTotalPedaladas(),
             levelText,
-            levelTextTimer
+            levelTextTimer,
+            distanciaInimigo,
+            emPerigo,
+            velocidadeMinima
         );
 
         batch.end();
     }
 
 
+    //encerra o jogo e game over
+    private void gameOver() {
+        float cadenciaMedia = contagemCadencias > 0 ?
+            somaCadencias / contagemCadencias : 0f;
+
+        GameStats stats = new GameStats(
+            tempoDecorrido,
+            pedalController.getTotalPedaladas(),
+            pontos,
+            currentLevel,
+            pedaladasPorSegundoMaxima,
+            cadenciaMedia
+        );
+
+        game.setScreen(new GameOverScreen(game, stats));
+    }
+
     private void updateBackground(float delta, boolean moving, float pps) {
         // curva mais suave + limite
         // até 6 pps vai aumentando, depois trava no máximo
         float speedMultiplier = 1f + Math.min(pps / 6f, 20.5f); // máximo é 20.5
 
-        //  se está pedalando muito pouco, não acelera o fundo
+        // se está pedalando muito pouco, não acelera o fundo
         if (pps < 0.5f) {
             speedMultiplier = 1f;
         }
@@ -201,10 +262,12 @@ public class GameScreen extends ScreenAdapter {
             if (tempoDecorrido > 5f && currentLevel == 1) {
                 startBackgroundTransition(bgAfternoon);
                 currentLevel = 2;
+                enemyManager.setNivel(2); // ATUALIZA O INIMIGO
                 showLevelText(2);
             } else if (tempoDecorrido > 15f && currentLevel == 2) {
                 startBackgroundTransition(bgNight);
                 currentLevel = 3;
+                enemyManager.setNivel(3); // ATUALIZA O INIMIGO
                 showLevelText(3);
             }
         }
@@ -231,5 +294,6 @@ public class GameScreen extends ScreenAdapter {
 
         player.dispose();
         hud.dispose();
+        enemyManager.dispose();
     }
 }
