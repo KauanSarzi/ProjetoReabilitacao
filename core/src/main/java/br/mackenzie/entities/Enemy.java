@@ -16,7 +16,7 @@ public class Enemy {
     private float frameTime = 0f;
     private float frameDuration = 0.15f;
 
-    private float escala = 0.25f; // ligeiramente maior que o player
+    private float escala = 0.5f; // ligeiramente maior que o player
     private float velocidade = 0f;
 
     public Enemy(float startX, float startY) {
