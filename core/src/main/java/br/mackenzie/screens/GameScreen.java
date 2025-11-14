@@ -7,6 +7,7 @@ import br.mackenzie.ui.Hud;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -25,7 +26,7 @@ public class GameScreen extends ScreenAdapter {
     private Viewport viewport;
     private OrthographicCamera camera;
 
-    // BACKGROUND (fica na própria tela)
+    // BACKGROUND
     private Texture bgDay, bgAfternoon, bgNight;
     private Texture currentBg, nextBg;
     private float bg1x = 0f;
@@ -58,6 +59,9 @@ public class GameScreen extends ScreenAdapter {
     private float somaCadencias = 0f;
     private int contagemCadencias = 0;
 
+    // 🔊 SOM DE FUNDO
+    private Music backgroundMusic;
+
     public GameScreen(Main game) {
         this.game = game;
         this.batch = game.getBatch();
@@ -77,18 +81,24 @@ public class GameScreen extends ScreenAdapter {
         bgNight = new Texture(Gdx.files.internal("background_night.jpg"));
         currentBg = bgDay;
 
+        // player
         player = new Player(0, 0);
         float groundY = 32f;
         playerX = 1280 / 2f - player.getWidth() / 2f;
         playerY = groundY;
 
+        // sistemas
         pedalController = new PedalController();
         hud = new Hud();
-
-        // Inicializa o inimigo na mesma altura do jogador
         enemyManager = new EnemyManager(groundY);
 
         showLevelText(1);
+
+        // 🔊 SOM DE FUNDO CARREGADO + LOOP
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("backgroundSound.mp3"));
+        backgroundMusic.setLooping(true);
+        backgroundMusic.setVolume(0.45f); // ajuste aqui o volume
+        backgroundMusic.play();
     }
 
     private void showLevelText(int level) {
@@ -101,39 +111,35 @@ public class GameScreen extends ScreenAdapter {
         Gdx.gl.glClearColor(0, 0, 0, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+        // PAUSE
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
+            backgroundMusic.pause(); // 🔊 pausa música ao abrir pause
             game.setScreen(new PauseScreen(game, this));
             return;
         }
 
-        // UPDATE GERAL
+        // UPDATE
         tempoDecorrido += delta;
 
-        // atualiza pedal
         pedalController.update(delta);
         boolean pedaling = pedalController.isPedaling();
         float pps = pedalController.getPedaladasPorSegundo();
 
-        // tracking de estatísticas
-        if (pps > pedaladasPorSegundoMaxima) {
+        // statisticas
+        if (pps > pedaladasPorSegundoMaxima)
             pedaladasPorSegundoMaxima = pps;
-        }
+
         somaCadencias += pps;
         contagemCadencias++;
 
-        // atualiza background com base no pedal e na cadência
         updateBackground(delta, pedaling, pps);
 
-        // pontos e como são calculados, porém esse é provisório, iremos mudar
         pontos += pps * delta * 10f;
 
-        // anima player
         player.animateOnly(delta, pedaling);
 
-        // verifica se troca de período
         checkLevelChange();
 
-        // ATUALIZA O INIMIGO e verifica se pegou o jogador
         boolean jogadorCapturado = enemyManager.update(
             delta,
             playerX,
@@ -145,7 +151,7 @@ public class GameScreen extends ScreenAdapter {
 
         if (jogadorCapturado) {
             gameOver();
-            return; // para o render
+            return;
         }
 
         // DRAW
@@ -154,9 +160,7 @@ public class GameScreen extends ScreenAdapter {
 
         renderBackground(batch);
 
-        // Desenha o inimigo ANTES do player (para ficar atrás)
         enemyManager.render(batch, playerY);
-
         player.drawAt(batch, playerX, playerY);
 
         float distanciaInimigo = enemyManager.getDistanciaAteJogador(playerX);
@@ -179,9 +183,10 @@ public class GameScreen extends ScreenAdapter {
         batch.end();
     }
 
-
-    //encerra o jogo e game over
+    // GAME OVER
     private void gameOver() {
+        backgroundMusic.stop(); // 🔊 parar música no game over
+
         float cadenciaMedia = contagemCadencias > 0 ?
             somaCadencias / contagemCadencias : 0f;
 
@@ -198,29 +203,23 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void updateBackground(float delta, boolean moving, float pps) {
-        // curva mais suave + limite
-        // até 6 pps vai aumentando, depois trava no máximo
-        float speedMultiplier = 1f + Math.min(pps / 6f, 20.5f); // máximo é 20.5
 
-        // se está pedalando muito pouco, não acelera o fundo
-        if (pps < 0.5f) {
+        float speedMultiplier = 1f + Math.min(pps / 6f, 20.5f);
+
+        if (pps < 0.5f)
             speedMultiplier = 1f;
-        }
 
         if (moving) {
             float bg1speed = bg1speedBase * speedMultiplier;
             float bg2speed = bg2speedBase * speedMultiplier;
 
-            // o fundo se move só quando pedala
             bg1x -= bg1speed * delta;
             bg2x -= bg2speed * delta;
         }
 
-        // loop do fundo
         if (bg1x <= -1280f) bg1x += 1280f;
         if (bg2x <= -1280f) bg2x += 1280f;
 
-        // fade
         if (transitioning) {
             transitionTimer += delta;
             transitionAlpha = Math.min(1f, transitionTimer / transitionDuration);
@@ -232,7 +231,6 @@ public class GameScreen extends ScreenAdapter {
             }
         }
 
-        // timer do texto de nível
         if (levelTextTimer > 0f) {
             levelTextTimer -= delta;
             if (levelTextTimer < 0f) levelTextTimer = 0f;
@@ -240,13 +238,12 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void renderBackground(SpriteBatch batch) {
-        // fundo base
+
         batch.draw(currentBg, bg1x, 0, 1280, 720);
         batch.draw(currentBg, bg1x + 1280f, 0, 1280, 720);
         batch.draw(currentBg, bg2x, 0, 1280, 720);
         batch.draw(currentBg, bg2x + 1280f, 0, 1280, 720);
 
-        // fundo em transição
         if (transitioning && nextBg != null) {
             batch.setColor(1f, 1f, 1f, transitionAlpha);
             batch.draw(nextBg, bg1x, 0, 1280, 720);
@@ -262,12 +259,12 @@ public class GameScreen extends ScreenAdapter {
             if (tempoDecorrido > 5f && currentLevel == 1) {
                 startBackgroundTransition(bgAfternoon);
                 currentLevel = 2;
-                enemyManager.setNivel(2); // ATUALIZA O INIMIGO
+                enemyManager.setNivel(2);
                 showLevelText(2);
             } else if (tempoDecorrido > 15f && currentLevel == 2) {
                 startBackgroundTransition(bgNight);
                 currentLevel = 3;
-                enemyManager.setNivel(3); // ATUALIZA O INIMIGO
+                enemyManager.setNivel(3);
                 showLevelText(3);
             }
         }
@@ -288,6 +285,10 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void dispose() {
+
+        if (backgroundMusic != null)
+            backgroundMusic.dispose(); // 🔊 liberar memória
+
         if (bgDay != null) bgDay.dispose();
         if (bgAfternoon != null) bgAfternoon.dispose();
         if (bgNight != null) bgNight.dispose();
