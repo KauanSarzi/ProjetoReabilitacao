@@ -29,10 +29,16 @@ public class Hud {
                        float levelTextTimer,
                        float distanciaInimigo,
                        boolean emPerigo,
-                       float velocidadeMinima) {
+                       float velocidadeMinima,
+                       float distanciaPercorrida,
+                       float distanciaMinima,
+                       float progressoDistancia,
+                       float cadenciaMedia,
+                       float progressoCadencia) {
 
+        // === INFORMAÇÕES BÁSICAS (CANTO SUPERIOR ESQUERDO) ===
         font.draw(batch, String.format("Tempo: %.1fs", tempo), 40, 700);
-        font.draw(batch, String.format("Pedaladas por segundo: %.1f", pedaladasPorSegundo), 40, 660);
+        font.draw(batch, String.format("Pedaladas/s: %.1f", pedaladasPorSegundo), 40, 660);
         font.draw(batch, String.format("Pontos: %.0f", pontos), 40, 620);
         font.draw(batch, String.format("Pedaladas totais: %d", totalPedaladas), 40, 580);
 
@@ -45,11 +51,18 @@ public class Hud {
         // Aviso de perigo
         if (emPerigo) {
             font.setColor(Color.RED);
-            font.draw(batch, "⚠ INIMIGO SE APROXIMANDO!", 40, 500);
+            font.draw(batch, "⚠ INIMIGO ACELERANDO!", 40, 500);
             font.setColor(Color.WHITE);
         }
 
-        // texto central (NÍVEL X)
+        // === PROGRESSO DE DISTÂNCIA (CANTO SUPERIOR DIREITO) ===
+        font.draw(batch, String.format("Distância: %.0f/%.0fm",
+            distanciaPercorrida, distanciaMinima), 900, 700);
+
+        font.draw(batch, String.format("Cadência Média: %.1f ped/s",
+            cadenciaMedia), 900, 660);
+
+        // Texto central de nível
         if (levelTextTimer > 0f) {
             float oldX = font.getData().scaleX;
             float oldY = font.getData().scaleY;
@@ -63,12 +76,14 @@ public class Hud {
             font.getData().setScale(oldX, oldY);
         }
 
-        // Barra de distância do inimigo (canto inferior direito)
-        batch.end(); // pausa o batch para desenhar shapes
+        // Pausa o batch para desenhar shapes
+        batch.end();
 
+        // === BARRAS DE PROGRESSO ===
         renderBarraDistancia(distanciaInimigo, emPerigo);
+        renderBarraProgressoFase(progressoDistancia, progressoCadencia);
 
-        batch.begin(); // retoma o batch
+        batch.begin();
     }
 
     /**
@@ -81,8 +96,8 @@ public class Hud {
         shapeRenderer.setColor(0.2f, 0.2f, 0.2f, 0.8f);
         shapeRenderer.rect(1080, 40, 180, 30);
 
-        // Barra de distância (quanto mais cheia, mais longe o inimigo)
-        float porcentagem = Math.min(1f, distancia / 800f); // 800px = distância "segura"
+        // Barra de distância
+        float porcentagem = Math.min(1f, distancia / 800f);
         Color corBarra = perigo ? Color.RED : Color.GREEN;
 
         shapeRenderer.setColor(corBarra);
@@ -94,10 +109,63 @@ public class Hud {
         font.getData().setScale(1.2f);
         font.setColor(Color.WHITE);
 
-        // Precisa de um batch ativo para texto
         SpriteBatch tempBatch = new SpriteBatch();
         tempBatch.begin();
         font.draw(tempBatch, "INIMIGO", 1090, 95);
+        tempBatch.end();
+        tempBatch.dispose();
+
+        font.getData().setScale(2f);
+    }
+
+    /**
+     * Desenha barras de progresso para distância e cadência média da fase
+     */
+    private void renderBarraProgressoFase(float progressoDistancia,
+                                          float progressoCadencia) {
+        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+
+        // === BARRA DE DISTÂNCIA ===
+        float barX = 400;
+        float barY = 50;
+        float barWidth = 400;
+        float barHeight = 25;
+
+        // Fundo
+        shapeRenderer.setColor(0.2f, 0.2f, 0.2f, 0.8f);
+        shapeRenderer.rect(barX, barY, barWidth, barHeight);
+
+        // Preenchimento
+        Color corDistancia = progressoDistancia > 0.5f ? Color.GREEN : Color.YELLOW;
+        shapeRenderer.setColor(corDistancia);
+        shapeRenderer.rect(barX + 2, barY + 2,
+            (barWidth - 4) * Math.min(1f, progressoDistancia),
+            barHeight - 4);
+
+        // === BARRA DE CADÊNCIA MÉDIA ===
+        barY = 15;
+
+        // Fundo
+        shapeRenderer.setColor(0.2f, 0.2f, 0.2f, 0.8f);
+        shapeRenderer.rect(barX, barY, barWidth, barHeight);
+
+        // Preenchimento
+        Color corCadencia = progressoCadencia >= 1f ? Color.GREEN : Color.RED;
+        shapeRenderer.setColor(corCadencia);
+        shapeRenderer.rect(barX + 2, barY + 2,
+            (barWidth - 4) * Math.min(1f, progressoCadencia),
+            barHeight - 4);
+
+        shapeRenderer.end();
+
+        // Labels das barras
+        font.getData().setScale(1.2f);
+        font.setColor(Color.WHITE);
+
+        SpriteBatch tempBatch = new SpriteBatch();
+        tempBatch.begin();
+        font.draw(tempBatch, "DISTÂNCIA", barX + 5, 90);
+        font.draw(tempBatch, "CADÊNCIA", barX + 5, 55);
         tempBatch.end();
         tempBatch.dispose();
 
