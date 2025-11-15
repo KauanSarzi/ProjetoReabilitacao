@@ -1,8 +1,10 @@
+
 package br.mackenzie.screens;
 
 import br.mackenzie.data.GameStats;
 import br.mackenzie.input.PedalController;
 import br.mackenzie.logic.EnemyManager;
+import br.mackenzie.logic.PhaseManager;
 import br.mackenzie.ui.Hud;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -37,15 +39,15 @@ public class GameScreen extends ScreenAdapter {
     private float transitionAlpha = 0f;
     private float transitionDuration = 2f;
     private float transitionTimer = 0f;
-    private int currentLevel = 1;
 
     private Player player;
     private float playerX, playerY;
 
-    // sistemas novos
+    // sistemas
     private PedalController pedalController;
     private Hud hud;
     private EnemyManager enemyManager;
+    private PhaseManager phaseManager;
 
     // lógica de jogo
     private float tempoDecorrido = 0f;
@@ -59,7 +61,7 @@ public class GameScreen extends ScreenAdapter {
     private float somaCadencias = 0f;
     private int contagemCadencias = 0;
 
-    // 🔊 SOM DE FUNDO
+    // som de fundo
     private Music backgroundMusic;
 
     public GameScreen(Main game) {
@@ -91,13 +93,14 @@ public class GameScreen extends ScreenAdapter {
         pedalController = new PedalController();
         hud = new Hud();
         enemyManager = new EnemyManager(groundY);
+        phaseManager = new PhaseManager();
 
         showLevelText(1);
 
-        // 🔊 SOM DE FUNDO CARREGADO + LOOP
+        // som de fundo
         backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("backgroundSound.mp3"));
         backgroundMusic.setLooping(true);
-        backgroundMusic.setVolume(0.45f); // ajuste aqui o volume
+        backgroundMusic.setVolume(0.45f);
         backgroundMusic.play();
     }
 
@@ -113,7 +116,7 @@ public class GameScreen extends ScreenAdapter {
 
         // PAUSE
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
-            backgroundMusic.pause(); // 🔊 pausa música ao abrir pause
+            backgroundMusic.pause();
             game.setScreen(new PauseScreen(game, this));
             return;
         }
@@ -124,6 +127,31 @@ public class GameScreen extends ScreenAdapter {
         pedalController.update(delta);
         boolean pedaling = pedalController.isPedaling();
         float pps = pedalController.getPedaladasPorSegundo();
+
+        // ATUALIZA SISTEMA DE FASES
+        boolean mudouFase = phaseManager.update(delta, pps);
+        if (mudouFase) {
+            int novaFase = phaseManager.getFaseAtual();
+
+            // Atualiza visual (background)
+            if (novaFase == 2) {
+                startBackgroundTransition(bgAfternoon);
+            } else if (novaFase == 3) {
+                startBackgroundTransition(bgNight);
+            }
+
+            // Atualiza nível do Enemy
+            enemyManager.setNivel(novaFase);
+
+            // Mostra texto de nível
+            showLevelText(novaFase);
+
+            // Verifica vitória (completou todas as fases)
+            if (phaseManager.isUltimaFase()) {
+                vitoria();
+                return;
+            }
+        }
 
         // statisticas
         if (pps > pedaladasPorSegundoMaxima)
@@ -138,7 +166,8 @@ public class GameScreen extends ScreenAdapter {
 
         player.animateOnly(delta, pedaling);
 
-        checkLevelChange();
+        // CALCULA MULTIPLICADOR DE VELOCIDADE DO ENEMY
+        float enemySpeedMultiplier = phaseManager.getEnemySpeedMultiplier(pps);
 
         boolean jogadorCapturado = enemyManager.update(
             delta,
@@ -146,7 +175,8 @@ public class GameScreen extends ScreenAdapter {
             playerY,
             player.getWidth(),
             player.getHeight(),
-            pps
+            pps,
+            enemySpeedMultiplier
         );
 
         if (jogadorCapturado) {
@@ -164,8 +194,8 @@ public class GameScreen extends ScreenAdapter {
         player.drawAt(batch, playerX, playerY);
 
         float distanciaInimigo = enemyManager.getDistanciaAteJogador(playerX);
-        boolean emPerigo = enemyManager.jogadorEmPerigo(pps);
-        float velocidadeMinima = enemyManager.getVelocidadeMinimaAtual();
+        boolean emPerigo = phaseManager.isEmRisco(pps);
+        float velocidadeMinima = phaseManager.getCadenciaMinima();
 
         hud.render(
             batch,
@@ -177,7 +207,12 @@ public class GameScreen extends ScreenAdapter {
             levelTextTimer,
             distanciaInimigo,
             emPerigo,
-            velocidadeMinima
+            velocidadeMinima,
+            phaseManager.getDistanciaPercorrida(),
+            phaseManager.getDistanciaMinima(),
+            phaseManager.getProgressoDistancia(),
+            phaseManager.getCadenciaMedia(),
+            phaseManager.getProgressoCadencia()
         );
 
         batch.end();
@@ -185,7 +220,7 @@ public class GameScreen extends ScreenAdapter {
 
     // GAME OVER
     private void gameOver() {
-        backgroundMusic.stop(); // 🔊 parar música no game over
+        backgroundMusic.stop();
 
         float cadenciaMedia = contagemCadencias > 0 ?
             somaCadencias / contagemCadencias : 0f;
@@ -194,7 +229,7 @@ public class GameScreen extends ScreenAdapter {
             tempoDecorrido,
             pedalController.getTotalPedaladas(),
             pontos,
-            currentLevel,
+            phaseManager.getFaseAtual(),
             pedaladasPorSegundoMaxima,
             cadenciaMedia
         );
@@ -202,8 +237,26 @@ public class GameScreen extends ScreenAdapter {
         game.setScreen(new GameOverScreen(game, stats));
     }
 
-    private void updateBackground(float delta, boolean moving, float pps) {
+    // VITÓRIA
+    private void vitoria() {
+        backgroundMusic.stop();
 
+        float cadenciaMedia = phaseManager.getCadenciaMedia();
+
+        GameStats stats = new GameStats(
+            tempoDecorrido,
+            pedalController.getTotalPedaladas(),
+            pontos,
+            phaseManager.getFaseAtual(),
+            pedaladasPorSegundoMaxima,
+            cadenciaMedia
+        );
+
+        // TODO: Criar VictoryScreen - por enquanto usa GameOverScreen
+        game.setScreen(new GameOverScreen(game, stats));
+    }
+
+    private void updateBackground(float delta, boolean moving, float pps) {
         float speedMultiplier = 1f + Math.min(pps / 6f, 20.5f);
 
         if (pps < 0.5f)
@@ -238,7 +291,6 @@ public class GameScreen extends ScreenAdapter {
     }
 
     private void renderBackground(SpriteBatch batch) {
-
         batch.draw(currentBg, bg1x, 0, 1280, 720);
         batch.draw(currentBg, bg1x + 1280f, 0, 1280, 720);
         batch.draw(currentBg, bg2x, 0, 1280, 720);
@@ -251,22 +303,6 @@ public class GameScreen extends ScreenAdapter {
             batch.draw(nextBg, bg2x, 0, 1280, 720);
             batch.draw(nextBg, bg2x + 1280f, 0, 1280, 720);
             batch.setColor(Color.WHITE);
-        }
-    }
-
-    private void checkLevelChange() {
-        if (!transitioning) {
-            if (tempoDecorrido > 5f && currentLevel == 1) {
-                startBackgroundTransition(bgAfternoon);
-                currentLevel = 2;
-                enemyManager.setNivel(2);
-                showLevelText(2);
-            } else if (tempoDecorrido > 15f && currentLevel == 2) {
-                startBackgroundTransition(bgNight);
-                currentLevel = 3;
-                enemyManager.setNivel(3);
-                showLevelText(3);
-            }
         }
     }
 
@@ -285,9 +321,8 @@ public class GameScreen extends ScreenAdapter {
 
     @Override
     public void dispose() {
-
         if (backgroundMusic != null)
-            backgroundMusic.dispose(); // 🔊 liberar memória
+            backgroundMusic.dispose();
 
         if (bgDay != null) bgDay.dispose();
         if (bgAfternoon != null) bgAfternoon.dispose();
