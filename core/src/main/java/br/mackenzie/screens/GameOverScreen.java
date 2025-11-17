@@ -149,28 +149,26 @@ public class GameOverScreen extends ScreenAdapter {
 
         // Botões
         restartBtn = new Image(restartTex);
-        restartBtn.setSize(200, 200);
-
+        restartBtn.setScaling(com.badlogic.gdx.utils.Scaling.fit);
         quitBtn = new Image(quitTex);
-        quitBtn.setSize(150, 150);
+        quitBtn.setScaling(com.badlogic.gdx.utils.Scaling.fit);
 
         setupButtonListeners();
 
         Table buttonsRow = new Table();
-        buttonsRow.add(restartBtn).padRight(40f);
-        buttonsRow.add(quitBtn);
+        buttonsRow.add(restartBtn).size(400, 400).padRight(25f);
+        buttonsRow.add(quitBtn).size(380, 380);
         buttonsRow.getColor().a = 0f;
         buttonsRow.addAction(Actions.sequence(
             Actions.delay(2.5f),
             Actions.fadeIn(0.5f)
         ));
 
-        // Montagem final
-        root.add(titleLabel).padBottom(20f).row();
-        root.add(tituloPerformance).padBottom(30f).row();
-        root.add(statsTable).padBottom(30f).row();
-        root.add(notaLabel).padBottom(40f).row();
-        root.add(buttonsRow).center();
+        root.add(titleLabel).padBottom(4f).row();
+        root.add(tituloPerformance).padBottom(5f).row();
+        root.add(statsTable).padBottom(5f).row();
+        root.add(notaLabel).padBottom(6f).row();
+        root.add(buttonsRow).padTop(-140f).padBottom(-100f).center().row();
     }
 
     private void setupButtonListeners() {
