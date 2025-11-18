@@ -3,13 +3,6 @@ package br.mackenzie.input;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 
-/**
- * Responsável por:
- * - detectar pedalada (SPACE)
- * - contar pedaladas totais
- * - calcular pedaladas por segundo
- * - dizer se está pedalando neste frame
- */
 public class PedalController {
 
     private float tempoDesdeUltimoReset = 0f;

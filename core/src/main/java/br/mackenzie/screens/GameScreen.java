@@ -64,8 +64,9 @@ public class GameScreen extends ScreenAdapter {
     // som de fundo
     private Music backgroundMusic;
 
-    // SISTEMA DE BEEP DE ALERTA
+    // SISTEMA DE BEEP DE ALERTA (CORRIGIDO)
     private Sound warningBeep;
+    private long beepSoundId = -1;  // ID do som sendo reproduzido
     private float beepCooldown = 0f;
     private final float BEEP_INTERVAL = 1.5f;
 
@@ -115,12 +116,11 @@ public class GameScreen extends ScreenAdapter {
 
         // === SOM DE ALERTA ===
         warningBeep = Gdx.audio.newSound(Gdx.files.internal("sounds/bip_down.mp3"));
+        beepSoundId = -1;  // Inicializa sem som tocando
     }
 
     @Override
     public void show() {
-        // quando essa tela volta (ex: depois do pause), NÃO recriamos nada
-        // só garantimos input e retomamos a música
         Gdx.input.setInputProcessor(null);
         if (backgroundMusic != null && !backgroundMusic.isPlaying()) {
             backgroundMusic.play();
@@ -140,6 +140,13 @@ public class GameScreen extends ScreenAdapter {
         // === PAUSE (ESC) ===
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             if (backgroundMusic != null) backgroundMusic.pause();
+
+            // Para o beep ao pausar
+            if (beepSoundId != -1) {
+                warningBeep.stop(beepSoundId);
+                beepSoundId = -1;
+            }
+
             game.setScreen(new PauseScreen(game, this));
             return;
         }
@@ -151,7 +158,14 @@ public class GameScreen extends ScreenAdapter {
         boolean pedaling = pedalController.isPedaling();
         float pps = pedalController.getPedaladasPorSegundo();
 
-        // sistema de fases
+        // === ATUALIZA ESTATÍSTICAS GLOBAIS *PRIMEIRO* ===
+        if (pps > pedaladasPorSegundoMaxima) {
+            pedaladasPorSegundoMaxima = pps;
+        }
+        somaCadencias += pps;
+        contagemCadencias++;
+
+        // === SISTEMA DE FASES (APÓS ESTATÍSTICAS) ===
         boolean mudouFase = phaseManager.update(delta, pps);
         if (mudouFase) {
             int novaFase = phaseManager.getFaseAtual();
@@ -175,13 +189,6 @@ public class GameScreen extends ScreenAdapter {
                 return;
             }
         }
-
-        // estatísticas globais
-        if (pps > pedaladasPorSegundoMaxima) {
-            pedaladasPorSegundoMaxima = pps;
-        }
-        somaCadencias += pps;
-        contagemCadencias++;
 
         // fundo parallax
         updateBackground(delta, pedaling, pps);
@@ -210,16 +217,22 @@ public class GameScreen extends ScreenAdapter {
             return;
         }
 
-        // === SISTEMA DE BEEP DE ALERTA ===
+        // === SISTEMA DE BEEP DE ALERTA (CORRIGIDO) ===
         boolean emPerigo = phaseManager.isEmRisco(pps);
 
         if (emPerigo) {
             beepCooldown -= delta;
             if (beepCooldown <= 0f) {
-                warningBeep.play(0.4f);
+                // Toca o beep e guarda o ID
+                beepSoundId = warningBeep.play(0.4f);
                 beepCooldown = BEEP_INTERVAL;
             }
         } else {
+            // Para o som IMEDIATAMENTE quando sair do perigo
+            if (beepSoundId != -1) {
+                warningBeep.stop(beepSoundId);
+                beepSoundId = -1;
+            }
             beepCooldown = 0f;
         }
 
@@ -260,6 +273,12 @@ public class GameScreen extends ScreenAdapter {
     private void gameOver() {
         if (backgroundMusic != null) backgroundMusic.stop();
 
+        // Para o beep se estiver tocando
+        if (beepSoundId != -1) {
+            warningBeep.stop(beepSoundId);
+            beepSoundId = -1;
+        }
+
         float cadenciaMedia = contagemCadencias > 0 ?
             somaCadencias / contagemCadencias : 0f;
 
@@ -279,7 +298,15 @@ public class GameScreen extends ScreenAdapter {
     private void vitoria() {
         if (backgroundMusic != null) backgroundMusic.stop();
 
-        float cadenciaMedia = phaseManager.getCadenciaMedia();
+        // Para o beep se estiver tocando
+        if (beepSoundId != -1) {
+            warningBeep.stop(beepSoundId);
+            beepSoundId = -1;
+        }
+
+        // Usa as estatísticas globais acumuladas
+        float cadenciaMedia = contagemCadencias > 0 ?
+            somaCadencias / contagemCadencias : 0f;
 
         GameStats stats = new GameStats(
             tempoDecorrido,
@@ -373,5 +400,3 @@ public class GameScreen extends ScreenAdapter {
         enemyManager.dispose();
     }
 }
-
-
