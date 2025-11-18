@@ -83,7 +83,7 @@ public class GameScreen extends ScreenAdapter {
 
         // === CARREGA BACKGROUNDS (UMA VEZ) ===
         bgDay = new Texture(Gdx.files.internal("background_day.jpg"));
-        bgAfternoon = new Texture(Gdx.files.internal("background_afternoon.jpg"));
+        bgAfternoon = new Texture(Gdx.files.internal("backaft.jpg"));
         bgNight = new Texture(Gdx.files.internal("background_night.jpg"));
         currentBg = bgDay;
 
