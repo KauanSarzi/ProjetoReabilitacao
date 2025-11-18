@@ -400,3 +400,4 @@ public class GameScreen extends ScreenAdapter {
         enemyManager.dispose();
     }
 }
+
