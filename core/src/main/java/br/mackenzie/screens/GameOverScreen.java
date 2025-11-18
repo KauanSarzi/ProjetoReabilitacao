@@ -55,7 +55,7 @@ public class GameOverScreen extends ScreenAdapter {
 
         // Fade-in inicial
         stage.getRoot().getColor().a = 0f;
-        stage.getRoot().addAction(Actions.fadeIn(1f));
+        stage.getRoot().addAction(Actions.fadeIn(0.1f));
     }
 
     private void loadAssets() {
