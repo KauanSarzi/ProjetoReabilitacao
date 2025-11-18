@@ -30,12 +30,7 @@ public class PhaseManager {
         }
     }
 
-    /**
-     * Atualiza a progressão da fase atual.
-     * @param delta Tempo decorrido desde o último frame
-     * @param pedaladasPorSegundo Cadência instantânea
-     * @return true se houve mudança de fase
-     */
+
     public boolean update(float delta, float pedaladasPorSegundo) {
         // Atualiza distância (simulação: 1 ped/s = 2 metros/s)
         distanciaPercorrida += pedaladasPorSegundo * 2f * delta;
@@ -53,9 +48,7 @@ public class PhaseManager {
         return false;
     }
 
-    /**
-     * Verifica se as condições para completar a fase foram atingidas
-     */
+
     private boolean verificarConclusaoFase() {
         FaseConfig fase = getFaseConfig(faseAtual);
 
@@ -65,9 +58,7 @@ public class PhaseManager {
             cadenciaMedia >= fase.cadenciaMinima;
     }
 
-    /**
-     * Avança para a próxima fase e reseta contadores
-     */
+
     private void proximaFase() {
         faseAtual++;
         distanciaPercorrida = 0f;
@@ -75,11 +66,7 @@ public class PhaseManager {
         contagemCadencias = 0;
     }
 
-    /**
-     * Retorna o multiplicador de velocidade do Enemy baseado na cadência atual
-     * @param pedaladasPorSegundo Cadência instantânea
-     * @return Multiplicador (1.0 = velocidade normal, >1.0 = mais rápido)
-     */
+
     public float getEnemySpeedMultiplier(float pedaladasPorSegundo) {
         FaseConfig fase = getFaseConfig(faseAtual);
 
@@ -92,7 +79,7 @@ public class PhaseManager {
         return 1f; // Velocidade normal
     }
 
-  
+
 
     public float getCadenciaMedia() {
         return contagemCadencias > 0 ? somaCadencias / contagemCadencias : 0f;
@@ -110,9 +97,7 @@ public class PhaseManager {
         return media / fase.cadenciaMinima;
     }
 
-    /**
-     * Verifica se o jogador está em risco (cadência abaixo da mínima)
-     */
+
     public boolean isEmRisco(float pedaladasPorSegundo) {
         FaseConfig fase = getFaseConfig(faseAtual);
         return pedaladasPorSegundo < fase.cadenciaMinima;
@@ -124,10 +109,7 @@ public class PhaseManager {
         return faseAtual;
     }
 
-    /**
-     * Retorna o último nível jogável completado (para estatísticas)
-     * Se faseAtual > FASES.length, retorna o número da última fase
-     */
+
     public int getNivelCompletado() {
         if (faseAtual > FASES.length) {
             return FASES.length; // Retorna 3 (última fase)
@@ -152,9 +134,7 @@ public class PhaseManager {
         return faseAtual > FASES.length;
     }
 
-    /**
-     * Retorna a configuração da fase especificada
-     */
+
     private FaseConfig getFaseConfig(int numeroFase) {
         int index = numeroFase - 1;
         if (index < 0 || index >= FASES.length) {
