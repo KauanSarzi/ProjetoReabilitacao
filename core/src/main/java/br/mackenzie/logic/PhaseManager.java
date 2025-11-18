@@ -1,13 +1,6 @@
 package br.mackenzie.logic;
 
-/**
- * Gerencia a progressão de fases baseada em DISTÂNCIA + CADÊNCIA.
- * Cada fase requer:
- * - Distância mínima percorrida
- * - Cadência média mínima mantida
- *
- * Se a cadência instantânea cair abaixo da mínima, o Enemy acelera.
- */
+
 public class PhaseManager {
 
     private int faseAtual = 1;
@@ -99,24 +92,18 @@ public class PhaseManager {
         return 1f; // Velocidade normal
     }
 
-    /**
-     * Retorna a cadência média da fase atual
-     */
+  
+
     public float getCadenciaMedia() {
         return contagemCadencias > 0 ? somaCadencias / contagemCadencias : 0f;
     }
 
-    /**
-     * Retorna o progresso percentual da distância na fase atual (0.0 a 1.0)
-     */
+
     public float getProgressoDistancia() {
         FaseConfig fase = getFaseConfig(faseAtual);
         return Math.min(1f, distanciaPercorrida / fase.distanciaMinima);
     }
 
-    /**
-     * Retorna o progresso percentual da cadência na fase atual (0.0 a 1.0+)
-     */
     public float getProgressoCadencia() {
         FaseConfig fase = getFaseConfig(faseAtual);
         float media = getCadenciaMedia();
@@ -137,6 +124,17 @@ public class PhaseManager {
         return faseAtual;
     }
 
+    /**
+     * Retorna o último nível jogável completado (para estatísticas)
+     * Se faseAtual > FASES.length, retorna o número da última fase
+     */
+    public int getNivelCompletado() {
+        if (faseAtual > FASES.length) {
+            return FASES.length; // Retorna 3 (última fase)
+        }
+        return Math.max(1, faseAtual - 1);
+    }
+
     public float getDistanciaPercorrida() {
         return distanciaPercorrida;
     }
@@ -149,11 +147,7 @@ public class PhaseManager {
         return getFaseConfig(faseAtual).cadenciaMinima;
     }
 
-    /**
-     * Agora este método significa:
-     * "todas as fases já foram concluídas?"
-     * Ele só retorna true DEPOIS de terminar a última fase jogável.
-     */
+
     public boolean isUltimaFase() {
         return faseAtual > FASES.length;
     }
