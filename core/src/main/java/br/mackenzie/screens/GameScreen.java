@@ -9,6 +9,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -63,6 +64,11 @@ public class GameScreen extends ScreenAdapter {
     // som de fundo
     private Music backgroundMusic;
 
+    // SISTEMA DE BEEP DE ALERTA
+    private Sound warningBeep;
+    private float beepCooldown = 0f;
+    private final float BEEP_INTERVAL = 1.5f;
+
     public GameScreen(Main game) {
         this.game = game;
         this.batch = game.getBatch();
@@ -106,13 +112,16 @@ public class GameScreen extends ScreenAdapter {
         backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("backgroundSound.mp3"));
         backgroundMusic.setLooping(true);
         backgroundMusic.setVolume(0.45f);
+
+        // === SOM DE ALERTA ===
+        warningBeep = Gdx.audio.newSound(Gdx.files.internal("sounds/bip_down.mp3"));
     }
 
     @Override
     public void show() {
         // quando essa tela volta (ex: depois do pause), NÃO recriamos nada
         // só garantimos input e retomamos a música
-        Gdx.input.setInputProcessor(null); // se precisar, configure aqui o input
+        Gdx.input.setInputProcessor(null);
         if (backgroundMusic != null && !backgroundMusic.isPlaying()) {
             backgroundMusic.play();
         }
@@ -201,6 +210,19 @@ public class GameScreen extends ScreenAdapter {
             return;
         }
 
+        // === SISTEMA DE BEEP DE ALERTA ===
+        boolean emPerigo = phaseManager.isEmRisco(pps);
+
+        if (emPerigo) {
+            beepCooldown -= delta;
+            if (beepCooldown <= 0f) {
+                warningBeep.play(0.4f);
+                beepCooldown = BEEP_INTERVAL;
+            }
+        } else {
+            beepCooldown = 0f;
+        }
+
         // === DRAW ===
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
@@ -211,7 +233,6 @@ public class GameScreen extends ScreenAdapter {
         player.drawAt(batch, playerX, playerY);
 
         float distanciaInimigo = enemyManager.getDistanciaAteJogador(playerX);
-        boolean emPerigo = phaseManager.isEmRisco(pps);
         float velocidadeMinima = phaseManager.getCadenciaMinima();
 
         hud.render(
@@ -264,7 +285,7 @@ public class GameScreen extends ScreenAdapter {
             tempoDecorrido,
             pedalController.getTotalPedaladas(),
             pontos,
-            phaseManager.getFaseAtual(),
+            phaseManager.getNivelCompletado(),
             pedaladasPorSegundoMaxima,
             cadenciaMedia
         );
@@ -340,6 +361,9 @@ public class GameScreen extends ScreenAdapter {
         if (backgroundMusic != null)
             backgroundMusic.dispose();
 
+        if (warningBeep != null)
+            warningBeep.dispose();
+
         if (bgDay != null) bgDay.dispose();
         if (bgAfternoon != null) bgAfternoon.dispose();
         if (bgNight != null) bgNight.dispose();
@@ -349,4 +373,5 @@ public class GameScreen extends ScreenAdapter {
         enemyManager.dispose();
     }
 }
+
 
