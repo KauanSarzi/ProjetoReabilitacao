@@ -85,7 +85,7 @@ public class GameOverScreen extends ScreenAdapter {
         fontSmall.getData().setScale(1.8f);
         fontSmall.setColor(Color.LIGHT_GRAY);
 
-        styleTitulo = new LabelStyle(fontTitle, Color.RED);
+        styleTitulo = new LabelStyle(fontTitle, Color.CYAN);
         styleStats = new LabelStyle(fontStats, Color.WHITE);
         styleSmall = new LabelStyle(fontSmall, Color.LIGHT_GRAY);
     }
@@ -96,7 +96,7 @@ public class GameOverScreen extends ScreenAdapter {
         stage.addActor(root);
 
         // Título "GAME OVER"
-        Label titleLabel = new Label("GAME OVER", styleTitulo);
+        Label titleLabel = new Label("RESUMO DA SESSÃO", styleTitulo);
         titleLabel.getColor().a = 0f;
         titleLabel.addAction(Actions.sequence(
             Actions.delay(0.2f),

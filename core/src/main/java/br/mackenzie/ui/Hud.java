@@ -114,25 +114,24 @@ public class Hud {
         batch.begin();
     }
 
-    /**
-     * ÚNICA barra na tela: progresso da distância da fase.
-     */
+
     private void renderBarraDistanciaFase(float progressoDistancia) {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
-        float barX = 400;
-        float barY = 40;
-        float barWidth = 400;
-        float barHeight = 22;
+        float barWidth = 360f;
+        float barHeight = 22f;
 
-        // Fundo cinza
-        shapeRenderer.setColor(0.2f, 0.2f, 0.2f, 0.9f);
+        // centraliza na horizontal
+        float barX = (1280f - barWidth) / 2f;
+        // deixa mais perto do fundo da tela, mas com folga
+        float barY = 25f;
+
+        // Fundo
+        shapeRenderer.setColor(0.2f, 0.2f, 0.2f, 1f);
         shapeRenderer.rect(barX, barY, barWidth, barHeight);
 
-        // Preenchimento (0–1)
+        // Preenchimento (amarelo até 50%, verde depois)
         float clamped = Math.min(1f, progressoDistancia);
-
-        // Verde é “bom”, amarelo até metade (feedback suave)
         Color corDistancia = clamped > 0.5f ? Color.GREEN : Color.YELLOW;
         shapeRenderer.setColor(corDistancia);
         shapeRenderer.rect(barX + 2, barY + 2,
