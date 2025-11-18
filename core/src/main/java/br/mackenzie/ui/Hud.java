@@ -146,3 +146,4 @@ public class Hud {
         shapeRenderer.dispose();
     }
 }
+

@@ -137,6 +137,17 @@ public class PhaseManager {
         return faseAtual;
     }
 
+    /**
+     * Retorna o último nível jogável completado (para estatísticas)
+     * Se faseAtual > FASES.length, retorna o número da última fase
+     */
+    public int getNivelCompletado() {
+        if (faseAtual > FASES.length) {
+            return FASES.length; // Retorna 3 (última fase)
+        }
+        return Math.max(1, faseAtual - 1);
+    }
+
     public float getDistanciaPercorrida() {
         return distanciaPercorrida;
     }
@@ -169,4 +180,3 @@ public class PhaseManager {
         return FASES[index];
     }
 }
-
