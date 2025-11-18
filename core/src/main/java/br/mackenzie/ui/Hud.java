@@ -39,10 +39,6 @@ public class Hud {
         // garante que nada fique transparente
         batch.setColor(Color.WHITE);
 
-        // ==========================
-        // BLOCO ESQUERDO – CADÊNCIA
-        // ==========================
-
         // Título "Cadência"
         font.getData().setScale(2.0f);
         font.setColor(emPerigo ? Color.ORANGE : Color.WHITE);
@@ -69,10 +65,7 @@ public class Hud {
             font.setColor(Color.WHITE);
         }
 
-        // ============================
-        // BLOCO DIREITO – DISTÂNCIA
-        // ============================
-
+      
         font.getData().setScale(2.0f);
         font.setColor(Color.WHITE);
         font.draw(batch, "Distância", 900, 700);
@@ -83,10 +76,7 @@ public class Hud {
                 distanciaPercorrida, distanciaMinima),
             900, 670);
 
-        // ============================
-        // TEXTO CENTRAL – LEVEL / FASE
-        // ============================
-
+        
         if (levelTextTimer > 0f) {
             float oldX = font.getData().scaleX;
             float oldY = font.getData().scaleY;
@@ -100,10 +90,7 @@ public class Hud {
             font.getData().setScale(oldX, oldY);
         }
 
-        // ============================
-        // BARRA DE PROGRESSO (DISTÂNCIA)
-        // ============================
-
+ 
         batch.end();
 
         // Usa a mesma projeção do batch (câmera do jogo)
