@@ -25,7 +25,7 @@ public class PedalController {
             pedaladasRecentes++;
         }
 
-        // "gasto" do impulso
+        // gasto do impulso
         if (impulso > 0f) {
             impulso -= delta;
             if (impulso < 0f) impulso = 0f;
