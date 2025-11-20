@@ -64,7 +64,7 @@ public class GameScreen extends ScreenAdapter {
     // som de fundo
     private Music backgroundMusic;
 
-    // SISTEMA DE BEEP DE ALERTA (CORRIGIDO)
+    // SISTEMA DE BEEP DE ALERTA
     private Sound warningBeep;
     private long beepSoundId = -1;  // ID do som sendo reproduzido
     private float beepCooldown = 0f;
@@ -74,7 +74,7 @@ public class GameScreen extends ScreenAdapter {
         this.game = game;
         this.batch = game.getBatch();
 
-        // === CÂMERA + VIEWPORT (inicializa UMA vez) ===
+        // CÂMERA + VIEWPORT (inicializa UMA vez)
         camera = new OrthographicCamera();
         viewport = new FitViewport(1280, 720, camera);
         viewport.apply(true);
@@ -83,17 +83,17 @@ public class GameScreen extends ScreenAdapter {
 
         // === CARREGA BACKGROUNDS (UMA VEZ) ===
         bgDay = new Texture(Gdx.files.internal("background_day.jpg"));
-        bgAfternoon = new Texture(Gdx.files.internal("background_afternoon.png"));
+        bgAfternoon = new Texture(Gdx.files.internal("background_afternoon.jpg"));
         bgNight = new Texture(Gdx.files.internal("background_night.jpg"));
         currentBg = bgDay;
 
-        // === PLAYER E POSIÇÃO BASE ===
+        // PLAYER E POSIÇÃO BASE
         float groundY = 32f;
         player = new Player(0, 0);
         playerX = 1280 / 2f - player.getWidth() / 2f;
         playerY = groundY;
 
-        // === SISTEMAS ===
+        // Sistemas
         pedalController = new PedalController();
         hud = new Hud();
         enemyManager = new EnemyManager(groundY);
@@ -110,9 +110,9 @@ public class GameScreen extends ScreenAdapter {
         contagemCadencias = 0;
 
         // === MÚSICA ===
-        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("backgroundSound.mp3"));
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("backgroundsom.mp3"));
         backgroundMusic.setLooping(true);
-        backgroundMusic.setVolume(0.45f);
+        backgroundMusic.setVolume(1.0f);
 
         // === SOM DE ALERTA ===
         warningBeep = Gdx.audio.newSound(Gdx.files.internal("sounds/bip_down.mp3"));
@@ -151,21 +151,21 @@ public class GameScreen extends ScreenAdapter {
             return;
         }
 
-        // === UPDATE ===
+        // UPDATE
         tempoDecorrido += delta;
 
         pedalController.update(delta);
         boolean pedaling = pedalController.isPedaling();
         float pps = pedalController.getPedaladasPorSegundo();
 
-        // === ATUALIZA ESTATÍSTICAS GLOBAIS *PRIMEIRO* ===
+        //ATUALIZA ESTATÍSTICAS GLOBAIS
         if (pps > pedaladasPorSegundoMaxima) {
             pedaladasPorSegundoMaxima = pps;
         }
         somaCadencias += pps;
         contagemCadencias++;
 
-        // === SISTEMA DE FASES (APÓS ESTATÍSTICAS) ===
+        // SISTEMA DE FASES (APÓS ESTATÍSTICAS)
         boolean mudouFase = phaseManager.update(delta, pps);
         if (mudouFase) {
             int novaFase = phaseManager.getFaseAtual();
@@ -217,7 +217,7 @@ public class GameScreen extends ScreenAdapter {
             return;
         }
 
-        // === SISTEMA DE BEEP DE ALERTA (CORRIGIDO) ===
+        //  SISTEMA DE BEEP DE ALERTA (CORRIGIDO)
         boolean emPerigo = phaseManager.isEmRisco(pps);
 
         if (emPerigo) {
