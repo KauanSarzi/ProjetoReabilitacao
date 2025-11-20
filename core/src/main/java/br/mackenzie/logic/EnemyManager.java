@@ -48,11 +48,6 @@ public class EnemyManager {
         enemy.setVelocidade(VELOCIDADE_INIMIGO_BASE * multiplicador);
     }
 
-    /**
-     * Atualiza o inimigo com suporte a multiplicador dinâmico de velocidade
-     * @param speedMultiplier Multiplicador aplicado quando jogador está abaixo da cadência mínima
-     * @return true se o inimigo alcançou o jogador
-     */
     public boolean update(float delta, float playerX, float playerY,
                           int playerWidth, int playerHeight,
                           float pedaladasPorSegundo,

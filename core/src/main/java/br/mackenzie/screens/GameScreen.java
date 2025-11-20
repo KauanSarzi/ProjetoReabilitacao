@@ -87,13 +87,13 @@ public class GameScreen extends ScreenAdapter {
         bgNight = new Texture(Gdx.files.internal("background_night.jpg"));
         currentBg = bgDay;
 
-        // === PLAYER E POSIÇÃO BASE ===
+        // PLAYER E POSIÇÃO BASE
         float groundY = 32f;
         player = new Player(0, 0);
         playerX = 1280 / 2f - player.getWidth() / 2f;
         playerY = groundY;
 
-        // === SISTEMAS ===
+        // Sistemas
         pedalController = new PedalController();
         hud = new Hud();
         enemyManager = new EnemyManager(groundY);
