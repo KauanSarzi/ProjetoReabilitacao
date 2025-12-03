@@ -26,7 +26,7 @@
 
 ## 🎯 Sobre o Projeto
 
-**Pulsar** é um *serious game* desenvolvido como parte do Projeto Final da disciplina de Desenvolvimento de Jogos da Universidade Presbiteriana Mackenzie. O jogo utiliza a framework **LibGDX** para criar uma experiência de *endless runner* onde as **pedaladas reais** de uma bicicleta ergométrica (capturadas via IoT) controlam diretamente a velocidade e progressão do personagem.
+**Pulsar** é um *serious game* desenvolvido como parte do Projeto Final da disciplina de Jogos Digitais da Universidade Presbiteriana Mackenzie. O jogo utiliza a framework **LibGDX** para criar uma experiência de *endless runner* onde as **pedaladas reais** de uma bicicleta ergométrica (capturadas via IoT) controlam diretamente a velocidade e progressão do personagem.
 
 ### Problema Abordado
 
@@ -307,7 +307,9 @@ cd pulsar-game
 
 **Instituição:** Universidade Presbiteriana Mackenzie - Faculdade de Computação e Informática
 
-**Disciplina:** Desenvolvimento de Jogos (2025-2)
+**Disciplina:** Jogos Digitais (2025-2)
+
+**Professor:** Leandro Pupo Natale
 
 ---
 
