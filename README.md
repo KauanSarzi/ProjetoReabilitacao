@@ -332,6 +332,6 @@ Este projeto foi desenvolvido para fins acadêmicos. Para uso comercial ou distr
 
 **⭐ Se este projeto foi útil, considere dar uma estrela no GitHub!**
 
- | [📖 Documentação Completa](Documentos do Projeto/short_paper_pulsar.pdf) | [🐛 Reportar Bug](kauansarzi24@gmail.com)
+  [📖 Documentação Completa](./docs/D) | [🐛 Reportar Bug](kauansarzi24@gmail.com)
 
 </div>
