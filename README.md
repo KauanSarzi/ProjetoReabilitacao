@@ -1,133 +1,335 @@
-PULSAR: Jogo Sério Gamificado com Integração IoT para Reabilitação Cardiovascular
-PULSAR: A Gamified Serious Game with IoT Integration for Cardiovascular Rehabilitation
+# 🚴 PULSAR - Jogo Sério para Reabilitação Cardiovascular
 
-Autores: [Kauan Sarzi, Guilherme Shinohara, Ricardo Kawamuro]
-Instituição: Universidade Presbiteriana Mackenzie – Faculdade de Computação e Informática
-E-mails: {kauan, guilherme, ricardo}@mackenzie.br
+[![LibGDX](https://img.shields.io/badge/LibGDX-Framework-red.svg)](https://libgdx.com/)
+[![Java](https://img.shields.io/badge/Java-17+-blue.svg)](https://www.oracle.com/java/)
+[![License](https://img.shields.io/badge/License-Academic-green.svg)]()
 
-Abstract
+> **Transformando reabilitação cardiovascular em uma experiência gamificada e motivadora através da integração IoT com bicicleta ergométrica.**
 
-Cardiovascular rehabilitation requires structured aerobic exercise, but adherence is often low due to monotony and lack of feedback. Pulsar is a serious game developed with libGDX and conceptually integrated with IoT sensors on an ergometric bike. Real pedal strokes control an endless runner in which cadence determines speed, challenge, and progression. The system aims to increase motivation, support intensity self-regulation, and provide clinically relevant performance metrics.
+---
 
-Keywords: serious games, cardiac rehabilitation, gamification, ergometric cycling.
+## 📋 Índice
 
-Resumo
+- [Sobre o Projeto](#-sobre-o-projeto)
+- [Características Principais](#-características-principais)
+- [Contexto Clínico](#-contexto-clínico)
+- [Arquitetura Técnica](#-arquitetura-técnica)
+- [Sistema de Fases](#-sistema-de-fases)
+- [Mecânicas de Jogo](#-mecânicas-de-jogo)
+- [Tecnologias Utilizadas](#-tecnologias-utilizadas)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Como Executar](#-como-executar)
+- [Roadmap e Melhorias Futuras](#-roadmap-e-melhorias-futuras)
+- [Autores](#-autores)
 
-A reabilitação cardiovascular exige exercícios aeróbicos estruturados, mas a adesão costuma ser baixa pela monotonia e falta de feedback. O Pulsar é um jogo sério desenvolvido em libGDX, integrado conceitualmente a sensores IoT em bicicleta ergométrica. As pedaladas controlam um endless runner no qual a cadência define velocidade, desafio e progressão. O sistema busca aumentar engajamento, apoiar a autorregulação da intensidade e fornecer métricas relevantes aos profissionais.
+---
 
-Palavras-chave: jogos sérios, reabilitação cardiovascular, gamificação, bicicleta ergométrica.
+## 🎯 Sobre o Projeto
 
-1. Introdução
+**Pulsar** é um *serious game* desenvolvido como parte do Projeto Final da disciplina de Desenvolvimento de Jogos da Universidade Presbiteriana Mackenzie. O jogo utiliza a framework **LibGDX** para criar uma experiência de *endless runner* onde as **pedaladas reais** de uma bicicleta ergométrica (capturadas via IoT) controlam diretamente a velocidade e progressão do personagem.
 
-As doenças cardiovasculares permanecem como a principal causa de morte no mundo. Programas de reabilitação baseados em bicicleta ergométrica reduzem morbimortalidade, mas enfrentam baixa adesão devido à monotonia, dificuldade em manter intensidade adequada e falta de feedback contínuo.
+### Problema Abordado
 
-Jogos sérios têm sido explorados como alternativa para tornar exercícios repetitivos mais estimulantes. O Pulsar segue essa abordagem ao transformar pedaladas em elementos de jogo como velocidade, perseguição, metas e feedback visual.
+Doenças cardiovasculares são a principal causa de morte no mundo. Programas de reabilitação baseados em bicicleta ergométrica são eficazes, mas enfrentam **baixa adesão** devido a:
 
-2. Problema e Contexto
+- ❌ Monotonia das sessões repetitivas
+- ❌ Dificuldade de manter intensidade adequada
+- ❌ Falta de feedback imediato sobre o desempenho
+- ❌ Baixa percepção de progresso
 
-Embora a bicicleta ergométrica seja segura e amplamente utilizada, muitos pacientes:
+### Solução Proposta
 
-pedalam abaixo da intensidade prescrita;
+O Pulsar gamifica o exercício aeróbico através de:
 
-não percebem progresso ao longo das sessões;
+- ✅ **Feedback visual e auditivo em tempo real**
+- ✅ **Metas claras e progressivas** (distância + cadência mínima)
+- ✅ **Autorregulação da intensidade** via mecânica de perseguição
+- ✅ **Métricas clínicas detalhadas** para profissionais de saúde
 
-perdem motivação rapidamente.
+---
 
-Esses fatores reduzem a efetividade do treino aeróbico e comprometem a continuidade do tratamento. O Pulsar busca atuar diretamente nesses pontos ao oferecer uma experiência guiada, lúdica e progressiva.
+## 🎮 Características Principais
 
-3. Justificativa
+### Sistema de Cadência Dinâmica
+- Velocidade do personagem diretamente proporcional às pedaladas por segundo (PPS)
+- Sistema de perseguição que incentiva manutenção da intensidade mínima
+- Feedback visual de risco quando a cadência cai abaixo do ideal
 
-O Pulsar utiliza recursos de gamificação para apoiar princípios da reabilitação:
+### Progressão de Fases
+- **3 níveis** com dificuldade crescente
+- Transições visuais de ambiente (Dia → Entardecer → Noite)
+- Requisitos duplos: distância percorrida + cadência média mínima
 
-Autorregulação da intensidade: a cadência controla a velocidade do personagem; baixa cadência aproxima o inimigo.
+### HUD Clínico
+- Cadência atual e mínima
+- Barra de progresso de distância
+- Alertas visuais e sonoros de baixa intensidade
+- Interface minimalista focada em dados essenciais
 
-Feedback imediato: HUD com cadência atual, cadência mínima e distância restante.
+### Sistema de Métricas
+- Tempo de sessão
+- Pedaladas totais
+- Cadência média e máxima
+- Pontuação baseada em desempenho
+- Sistema de classificação (Ciclista Profissional, Pedalador Experiente, etc.)
 
-Metas claras: fases com distâncias e cadências mínimas específicas.
+---
 
-Senso de progresso: tela final com métricas e classificações.
+## 🏥 Contexto Clínico
 
-Esse conjunto favorece motivação e consistência – fatores reconhecidos na literatura como essenciais para a adesão.
+O design do Pulsar segue princípios de reabilitação cardiovascular:
 
-4. Descrição do Jogo
-4.1 Gameplay
+| Princípio Clínico | Implementação no Jogo |
+|-------------------|----------------------|
+| **Progressão Gradual** | Aumento de 75% na distância e cadência entre níveis |
+| **Esforço Contínuo** | Mecânica de perseguição reduz pausas prolongadas |
+| **Autorregulação** | Jogador controla intensidade através da cadência |
+| **Feedback Corretivo** | Alertas visuais/sonoros indicam intensidade inadequada |
+| **Segurança** | Evita picos abruptos; esforço controlado pelo paciente |
 
-O Pulsar é um endless runner 2D controlado por pedaladas reais (simuladas por teclado no protótipo). A velocidade do personagem depende da cadência. Um inimigo persegue o jogador e funciona como alerta visual de baixa intensidade.
+---
 
-4.2 Níveis
+## 🏗️ Arquitetura Técnica
 
-O jogo é dividido em três fases com dificuldade crescente:
+### Padrões de Projeto Utilizados
 
-Nível	Distância	Cadência mínima	Ambiente
-1	50 m	2,0 ped/s	Dia
-2	100 m	3,5 ped/s	Entardecer
-3	150 m	5,0 ped/s	Noite
-4.3 HUD
+```
+br.mackenzie/
+├── Main.java                 # Game core (ApplicationListener)
+├── entities/                 # Entity Component Pattern
+│   ├── Player.java          # Componente visual do jogador
+│   └── Enemy.java           # Sistema de perseguição
+├── screens/                  # Screen Management Pattern
+│   ├── MenuScreen.java
+│   ├── GameScreen.java      # Loop principal
+│   ├── PauseScreen.java
+│   └── GameOverScreen.java
+├── logic/                    # Game Logic Layer
+│   ├── PhaseManager.java    # Controle de progressão
+│   └── EnemyManager.java    # IA do inimigo
+├── input/
+│   └── PedalController.java # Abstração de entrada (IoT/Teclado)
+├── ui/
+│   └── Hud.java             # Interface clínica
+└── data/
+    └── GameStats.java       # Armazenamento de métricas
+```
 
-O HUD mostra apenas informações essenciais:
+### Decisões de Design Técnico
 
-cadência atual;
+#### 1. **Sistema de Background Parallax**
+```java
+// Velocidade do background proporcional à cadência
+float speedMultiplier = 1f + Math.min(pps / 6f, 20.5f);
+bg1x -= bg1speedBase * speedMultiplier * delta;
+```
 
-cadência mínima alvo;
+#### 2. **Cálculo de Cadência (Rolling Average)**
+```java
+// Janela de tempo de 1 segundo para calcular PPS
+if (tempoDesdeUltimoReset >= JANELA_TEMPO) {
+    pedaladasPorSegundo = pedaladasRecentes / tempoDesdeUltimoReset;
+}
+```
 
-distância percorrida;
+#### 3. **Sistema de Progressão Inteligente**
+```java
+// Fase só avança se atingir AMBOS os requisitos
+boolean verificarConclusaoFase() {
+    return distanciaPercorrida >= fase.distanciaMinima &&
+           cadenciaMedia >= fase.cadenciaMinima;
+}
+```
 
-barra de progresso;
+---
 
-alerta de baixa intensidade.
+## 📊 Sistema de Fases
 
-4.4 Tela de Resultados
+| Nível | Distância Mínima | Cadência Mínima | Ambiente | Velocidade do Inimigo |
+|-------|------------------|-----------------|----------|----------------------|
+| **1** | 50 m | 2.0 ped/s | Dia ☀️ | Base × 0.8 |
+| **2** | 100 m | 3.5 ped/s | Entardecer 🌅 | Base × 1.2 |
+| **3** | 150 m | 5.0 ped/s | Noite 🌙 | Base × 1.6 |
 
-Após cada fase, o jogador recebe:
+### Condições de Vitória
+- ✅ Completar 150m na Fase 3
+- ✅ Manter cadência média ≥ 5.0 ped/s
 
-pedaladas totais;
+### Condição de Derrota
+- ❌ Ser alcançado pelo inimigo (cadência muito baixa por tempo prolongado)
 
-cadência média e máxima;
+---
 
-tempo total;
+## 🎯 Mecânicas de Jogo
 
-nível concluído;
+### Sistema de Perseguição Adaptativa
 
-nota e classificação textual.
+O inimigo funciona como um **indicador visual de risco**, não como obstáculo arbitrário:
 
-Esses dados podem ser utilizados por fisioterapeutas para acompanhar evolução.
+```java
+if (pedaladasPorSegundo < velocidadeMinima) {
+    // Inimigo acelera proporcionalmente ao déficit
+    float deficit = velocidadeMinima - pedaladasPorSegundo;
+    speedMultiplier = 1f + (deficit * 0.3f);
+} else {
+    // Inimigo recua lentamente
+    enemy.perseguir(delta * -0.3f, playerX);
+}
+```
 
-4.5 Integração IoT
+### Sistema de Alerta Sonoro
 
-A arquitetura prevê leitura de sensores de cadência conectados à bicicleta. No protótipo atual, a entrada é simulada via teclado, permitindo testes antes da integração completa com hardware.
+- **Beep periódico** quando a cadência cai abaixo do mínimo
+- Intervalo de 1.5 segundos entre alertas
+- Som para **imediatamente** ao atingir cadência adequada
 
-5. Relação com a Reabilitação Cardiovascular
+---
 
-O design do Pulsar foi guiado por princípios clínicos:
+## 🛠️ Tecnologias Utilizadas
 
-Progressão gradual: níveis mais longos e com maior cadência mínima.
+| Tecnologia | Versão | Propósito |
+|------------|--------|-----------|
+| **Java** | 17+ | Linguagem principal |
+| **LibGDX** | 1.12.1 | Framework de jogo multiplataforma |
+| **Gradle** | 8.x | Build automation |
+| **Scene2D** | (LibGDX) | Sistema de UI (menus, HUD) |
+| **ShapeRenderer** | (LibGDX) | Renderização de barras de progresso |
 
-Esforço contínuo: mecânica de perseguição reduz interrupções.
+### Dependências Externas
 
-Feedback corretivo: ajustes imediatos baseados na cadência.
+```gradle
+dependencies {
+    api "com.badlogicgames.gdx:gdx:$gdxVersion"
+    // Assets: Texturas, Sons, Música
+}
+```
 
-Segurança: intensidade autorregulada e sem picos abruptos.
+---
 
-Assim, o Pulsar complementa sessões supervisionadas, sem substituir orientação profissional.
+## 📁 Estrutura do Projeto
 
-6. Conclusão e Trabalhos Futuros
+```
+pulsar/
+├── core/src/main/java/br/mackenzie/
+│   ├── Main.java
+│   ├── entities/
+│   │   ├── Player.java       # 4 frames de animação
+│   │   └── Enemy.java        # Sistema de perseguição
+│   ├── screens/
+│   │   ├── MenuScreen.java   # Menu principal + tela de controles
+│   │   ├── GameScreen.java   # Loop principal do jogo
+│   │   ├── PauseScreen.java  # Sistema de pausa (ESC)
+│   │   └── GameOverScreen.java # Estatísticas finais
+│   ├── logic/
+│   │   ├── PhaseManager.java     # Controle de fases
+│   │   └── EnemyManager.java     # IA do inimigo
+│   ├── input/
+│   │   └── PedalController.java  # Simulação de IoT (SPACE)
+│   ├── ui/
+│   │   └── Hud.java              # HUD clínico
+│   └── data/
+│       └── GameStats.java        # Métricas de sessão
+├── assets/
+│   ├── images/                   # Texturas e sprites
+│   ├── sounds/                   # Efeitos sonoros
+│   └── backgroundsom.mp3         # Música ambiente
+└── docs/
+    └── short_paper_pulsar.pdf    # Documentação acadêmica
+```
 
-O Pulsar mostra que jogos sérios podem apoiar o engajamento e o controle de intensidade na reabilitação cardiovascular. Como próximos passos:
+---
 
-implementação da integração IoT real;
+## 🚀 Como Executar
 
-personalização automática das metas por perfil de paciente;
+### Pré-requisitos
 
-testes com profissionais e usuários reais;
+- **JDK 17** ou superior
+- **Gradle 8.x**
+- **IDE recomendada:** IntelliJ IDEA ou Eclipse
 
-criação de painel web para monitoramento clínico.
+### Passos
 
-O protótipo atual demonstra a viabilidade da solução e seu potencial terapêutico.
+1. **Clone o repositório**
+```bash
+git clone https://github.com/seu-usuario/pulsar-game.git
+cd pulsar-game
+```
 
-Referências
+2. **Compile o projeto**
+```bash
+./gradlew build
+```
 
-Balady, G. J. et al. (2007). Circulation, 115, 2675–2682.
-Mader, S., Natkin, S., Levieux, G. (2012). IJCSS, 11(1), 1–13.
-Reis, M. S. et al. (2018). IEEE TNSRE, 26(5), 1019–1030.
-Ryan, R. M.; Deci, E. L. (2000). American Psychologist, 55, 68–78.
-World Health Organization (2021). Cardiovascular Diseases – Fact Sheet.
+3. **Execute na desktop**
+```bash
+./gradlew lwjgl3:run
+```
+
+### Controles
+
+| Tecla | Ação |
+|-------|------|
+| **SPACE** | Pedalar (simulação IoT) |
+| **ESC** | Pausar jogo |
+
+---
+
+## 🔮 Roadmap e Melhorias Futuras
+
+### Fase 1: Integração IoT Real ⏳
+- [ ] Implementar classe `SpacebarTelemetry.java`
+- [ ] Integrar sensor de cadência via Bluetooth/WiFi
+- [ ] Calibração automática de cadência baseada no perfil do paciente
+
+### Fase 2: Painel Clínico 📊
+- [ ] Dashboard web para fisioterapeutas
+- [ ] Histórico de sessões e evolução
+- [ ] Exportação de relatórios em PDF
+
+### Fase 3: Personalização Adaptativa 🎯
+- [ ] Ajuste automático de metas baseado em desempenho
+- [ ] Sistema de conquistas (achievements)
+- [ ] Multiplayer cooperativo (competição saudável)
+
+### Fase 4: Validação Clínica 🏥
+- [ ] Testes com fisioterapeutas
+- [ ] Coleta de feedback de pacientes
+- [ ] Estudo de caso sobre adesão ao tratamento
+
+---
+
+## 👥 Autores
+
+**Desenvolvido por:**
+- Kauan Sarzi
+- Guilherme Shinohara
+- Ricardo Kawamuro
+
+**Instituição:** Universidade Presbiteriana Mackenzie - Faculdade de Computação e Informática
+
+**Disciplina:** Desenvolvimento de Jogos (2025-2)
+
+---
+
+## 📄 Licença
+
+Este projeto foi desenvolvido para fins acadêmicos. Para uso comercial ou distribuição, entre em contato com os autores.
+
+---
+
+## 📚 Referências
+
+- Balady, G. J. et al. (2007). *Circulation*, 115, 2675–2682.
+- Mader, S.; Natkin, S.; Levieux, G. (2012). *IJCSS*, 11(1), 1–13.
+- Reis, M. S. et al. (2018). *IEEE TNSRE*, 26(5), 1019–1030.
+- Ryan, R. M.; Deci, E. L. (2000). *American Psychologist*, 55, 68–78.
+
+---
+
+<div align="center">
+
+**⭐ Se este projeto foi útil, considere dar uma estrela no GitHub!**
+
+[🎮 Ver Demo](#) | [📖 Documentação Completa](docs/short_paper_pulsar.pdf) | [🐛 Reportar Bug](#)
+
+</div>
