@@ -251,8 +251,8 @@ pulsar/
 
 1. **Clone o repositório**
 ```bash
-git clone https://github.com/seu-usuario/pulsar-game.git
-cd pulsar-game
+git clone https://github.com/seu-usuario/ProjetoReabilitacao.git
+cd ProjetoReabilitacao
 ```
 
 2. **Compile o projeto**
@@ -332,6 +332,6 @@ Este projeto foi desenvolvido para fins acadêmicos. Para uso comercial ou distr
 
 **⭐ Se este projeto foi útil, considere dar uma estrela no GitHub!**
 
-[🎮 Ver Demo](#) | [📖 Documentação Completa](docs/short_paper_pulsar.pdf) | [🐛 Reportar Bug](#)
+ | [📖 Documentação Completa](Documentos do Projeto/short_paper_pulsar.pdf) | [🐛 Reportar Bug](kauansarzi24@gmail.com)
 
 </div>
